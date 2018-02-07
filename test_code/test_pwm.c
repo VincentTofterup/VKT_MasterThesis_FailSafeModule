@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-int main (void)
-{
+
+// To compile run:
+// gcc -Wall -o test_pwm test_pwm.c -lwiringPi -lpthread
+int main (void){
   int l ;
   printf ("PWM test program\n") ;
 
@@ -23,7 +25,7 @@ int main (void)
   //using BCM Pin Number
   int pin = 5;
   if (wiringPiSetupGpio() == -1)
-    exit (1);                   
+    exit (1);
   */
 
   pinMode (pin, PWM_OUTPUT);
