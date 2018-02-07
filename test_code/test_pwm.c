@@ -11,8 +11,10 @@ int main (void){
 
   //using wiringPi Pin Number
   int pin = 7;
-  if (wiringPiSetup () == -1)
-    exit (1) ;
+  if (wiringPiSetup () == -1){
+    printf("Cannot Access WiringPi, exiting...\n");
+    exit (1);
+  }
 
   /*
   //using Physical Pin Number
