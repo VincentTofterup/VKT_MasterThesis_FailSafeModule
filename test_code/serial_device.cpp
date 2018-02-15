@@ -51,6 +51,7 @@
 #include <unistd.h>                                                  /* UNIX Standard Definitions          */
 #include <errno.h>                                                   /* ERROR Number Definitions           */
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 int main(){
@@ -87,7 +88,7 @@ int main(){
 	SerialPortSettings.c_oflag &= ~OPOST;                              /* No Output Processing*/
 
 	/* Setting timeouts */
-	SerialPortSettings.c_cc[VMIN] = 10;                                /* Read at least 10 characters */
+	SerialPortSettings.c_cc[VMIN] = 6;                                /* Read at least 10 characters */
 	SerialPortSettings.c_cc[VTIME] = 0;                                /* Wait indefinetly   */
 
 	if((tcsetattr(fd,TCSANOW,&SerialPortSettings)) != 0){              /* Set the attributes to the termios structure*/
@@ -95,28 +96,37 @@ int main(){
 	}
 
   /*----------------------------------------- Read data from serial port ---------------------------------------*/
-  tcflush(fd, TCIFLUSH);                                           /* Discards old data in the rx buffer            */
-  for(int i; i < 500; i++){
-    char read_buffer[24];                                            /* Buffer to store the data received              */
-    int  bytes_read = 0;                                             /* Number of bytes read by the read() system call */
-    int j = 0;
 
+  std::ofstream myfile;
+  myfile.open ("IMU_data.txt");
+for (int k = 0; k < 100; k++) {
+  tcflush(fd, TCIFLUSH);   /* Discards old data in the rx buffer            */
 
-    std::vector<int> gyro_x, gyro_y, gyro_z;
-    std::vector<int> acc_x, acc_y, acc_z;
+	char read_buffer[256];   /* Buffer to store the data received              */
+	int  bytes_read = 0;    /* Number of bytes read by the read() system call */
+	int i = 0;
 
-    bytes_read = read(fd,&read_buffer,2);
+	bytes_read = read(fd,&read_buffer,256); /* Read the data                   */
 
-    for( j = 0; j < bytes_read; j++){
-      printf("%c",read_buffer[j]);
+  printf("\n\n  Bytes Rxed -%d\n", bytes_read); /* Print the number of bytes read */
 
-      //for( int k = 0; k < 7; k++){
+  if(bytes_read > 1){
 
-      //}
+    for(i=0;i<bytes_read;i++){	 /*printing only the received characters*/
+
+      printf("%c",read_buffer[i]);
+
+      myfile << read_buffer[i];
+      if(read_buffer[i] == ' '){
+        printf(", ");
+        myfile << ", ";
+      }
     }
-    printf("\n");
   }
 
+}
+
+  myfile.close();
 	printf("\n+----------------------------------+\n\n\n");
 	close(fd); /* Close the serial port */
   return 0;
