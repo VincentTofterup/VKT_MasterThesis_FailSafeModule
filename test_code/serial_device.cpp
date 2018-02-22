@@ -12,7 +12,7 @@
 /* Commands      : g++ -std=c++11 -o serial_device serial_device.cpp                                  */
 /* Programmer    : Vincent Klyverts Tofterup                                                          */
 /* Inspiration   : http://xanthium.in/Serial-Port-Programming-on-Linux                                */
-/* Date	         : 15-Februray-2018                                                                   */
+/* Date	         : 22-Februray-2018                                                                   */
 /*----------------------------------------------------------------------------------------------------*/
 /* BSD 3-Clause License                                                                               */
 /*                                                                                                    */
@@ -53,6 +53,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
 
 int main(){
   int fd;
@@ -97,9 +98,12 @@ int main(){
 
   /*----------------------------------------- Read data from serial port ---------------------------------------*/
 
+  std::vector <int> raw_data;
   std::ofstream myfile;
-  myfile.open ("IMU_data.txt");
-for (int k = 0; k < 100; k++) {
+  myfile.open ("IMU_data.txt",  std::ios_base::app);
+
+
+for (int k = 0; k < 500; k++) {                                     /* Should be a while true ? What about closing file? */
   tcflush(fd, TCIFLUSH);                                            /* Discards old data in the rx buffer            */
 
 	char read_buffer[256];                                            /* Buffer to store the data received              */
@@ -108,23 +112,36 @@ for (int k = 0; k < 100; k++) {
 
 	bytes_read = read(fd,&read_buffer,256);                           /* Read the data                   */
 
-  printf("\nBytes Rxed -%d", bytes_read);                           /* Print the number of bytes read */
+  //printf("\nBytes Rxed -%d", bytes_read);                           /* Print the number of bytes read */
 
   if(bytes_read > 1){
+
+    std::string tmp;
 
     for(i=0;i<bytes_read;i++){	                                    /* Write only the received characters*/
       //printf("%c",read_buffer[i]);
       myfile << read_buffer[i];
+      tmp+=read_buffer[i];
+
       if(read_buffer[i] == ' '){
         //printf(", ");
         myfile << ", ";
+
+        std::string::size_type sz;
+        raw_data.push_back(std::stoi(tmp, &sz));
+        tmp.erase();
       }
     }
   }
 }
 
-  myfile.close();
-	printf("\n+----------------------------------+\n\n\n");
+//for(int i=0; i<raw_data.size(); i++){
+  //std::cout << raw_data[i] << std::endl;
+//}
+
+
+  //myfile.close();
+	// printf("\n+----------------------------------+\n\n\n");
 	close(fd);                                                       /* Close the serial port */
   return 0;
 }
