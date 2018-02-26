@@ -98,12 +98,12 @@ int main(){
 
   /*----------------------------------------- Read data from serial port ---------------------------------------*/
 
-  std::vector <int> raw_data;
+  //std::vector <int> raw_data;
   std::ofstream myfile;
   myfile.open ("IMU_data.txt",  std::ios_base::app);
 
 
-for (int k = 0; k < 500; k++) {                                     /* Should be a while true ? What about closing file? */
+for (int k = 0; k < 5; k++) {                                     /* Should be a while true ? What about closing file? */
   tcflush(fd, TCIFLUSH);                                            /* Discards old data in the rx buffer            */
 
 	char read_buffer[256];                                            /* Buffer to store the data received              */
@@ -116,20 +116,20 @@ for (int k = 0; k < 500; k++) {                                     /* Should be
 
   if(bytes_read > 1){
 
-    std::string tmp;
+    //std::string tmp;
 
     for(i=0;i<bytes_read;i++){	                                    /* Write only the received characters*/
       //printf("%c",read_buffer[i]);
       myfile << read_buffer[i];
-      tmp+=read_buffer[i];
+      //tmp+=read_buffer[i];
 
       if(read_buffer[i] == ' '){
         //printf(", ");
         myfile << ", ";
 
-        std::string::size_type sz;
-        raw_data.push_back(std::stoi(tmp, &sz));
-        tmp.erase();
+        //std::string::size_type sz;
+        //raw_data.push_back(std::stoi(tmp, &sz));
+        //tmp.erase();
       }
     }
   }
