@@ -8,7 +8,14 @@
 #include <vector>
 #include <string>
 #include <math.h>
+#include <algorithm>
+#include <cstring>
 
+void removeCharsFromString( std::string &str, char* charsToRemove ) {
+   for ( unsigned int i = 0; i < std::strlen(charsToRemove); ++i ) {
+      str.erase( std::remove(str.begin(), str.end(), charsToRemove[i]), str.end() );
+   }
+}
 
 
 int main(){
@@ -53,6 +60,19 @@ int main(){
 
 
 
+  double gx,gy,gz,ax,ay,az;
+  long gx_conv, gy_conv, gz_conv, ax_conv, ay_conv, az_conv;
+  float gx_conv_old, gy_conv_old, gz_conv_old, ax_conv_old, ay_conv_old, az_conv_old;
+
+  long acc_total_vector;
+  float angle_pitch, angle_roll, angle_roll_acc, angle_pitch_acc, angle_roll_output, angle_pitch_output;
+  bool set_gyro_angles = false;
+
+  angle_roll_output = 0.0;
+  angle_pitch_output =0.0;
+
+  std::cout << "Entering While Loop" << std::endl;
+
   while(true){
   tcflush(fd, TCIFLUSH);                                            /* Discards old data in the rx buffer            */
 
@@ -61,101 +81,109 @@ int main(){
 	int i = 0;
 
 
-  int gx,gy,gz,ax,ay,az;
-  float gx_conv, gy_conv, gz_conv, ax_conv, ay_conv, az_conv;
-  float gx_conv_old, gy_conv_old, gz_conv_old, ax_conv_old, ay_conv_old, az_conv_old;
-
+  std::vector <int> raw_data;
 
 	bytes_read = read(fd,&read_buffer,256);                           /* Read the data                   */
 
   //printf("\nBytes Rxed -%d", bytes_read);                           /* Print the number of bytes read */
 
   if(bytes_read > 1){
-
-    std::vector <int> raw_data;
       std::string tmp;
       // line begin
-      if (read_buffer[i] == ';') {
+
+        //std::cout << "Detected beginning of line" << std::endl;
         for(i=0;i<bytes_read;i++){	                                    /* Write only the received characters*/
+
 
           tmp+=read_buffer[i];
 
           if(read_buffer[i] == ' '){
-
+            //std::cout << "Detected end of number" << std::endl;
             std::string::size_type sz;
-            try{
-              raw_data.push_back(std::stoi(tmp, &sz));
-            }
-            catch (const std::invalid_argument& ia) {
-              raw_data.push_back(0);
-            }
-            tmp.erase();
-
-            //line end and time for save.
-            if(read_buffer[i] == ':'){
-              gx = raw_data[0];
-              gy = raw_data[1];
-              gz = raw_data[2];
-              ax = raw_data[3];
-              ay = raw_data[4];
-              az = raw_data[5];
-
-
-
-              gx_conv = gx/131.0;
-              gy_conv = gy/131.0;
-              gz_conv = gz/131.0;
-              ax_conv = (ax/2048) * 9.82;
-              ay_conv = (ay/2048) * 9.82;
-              az_conv = (az/2048) * 9.82;
-
-
-              float angle_pitch, angle_roll, angle_roll_acc, angle_pitch_acc, angle_roll_output, angle_pitch_output, acc_total_vector;
-              bool set_gyro_angles;
-
-              //Gyro angle calculations
-              // 1 / (8000Hz / 131)
-              angle_pitch += gx * (1 / (8000 / 131)); //Calculate the traveled pitch angle and add this to the angle_pitch variable
-              angle_roll += gy * (1 / (8000 / 131));  //Calculate the traveled roll angle and add this to the angle_roll variable
-
-              //1 / (8000Hz / 131) * (3.142(PI) / 180degr)
-              angle_pitch += angle_roll * sin(gz * (1 / (8000 / 131)) * (3.142 / 180)); //If the IMU has yawed transfer the roll angle to the pitch angle
-              angle_roll -= angle_pitch * sin(gz * (1 / (8000 / 131)) * (3.142 / 180)); //If the IMU has yawed transfer the pitch angle to the roll angle
-
-
-              //Accelerometer angle calculations
-              acc_total_vector = sqrt((ax*ax)+(ay*ay)+(az*az));  //Calculate the total accelerometer vector
-
-              //1 / (3.142(PI) / 180)
-              angle_pitch_acc = asin((float)ay/acc_total_vector)* (1 / (3.142 / 180));       //Calculate the pitch angle
-              angle_roll_acc = asin((float)ax/acc_total_vector)* -(1 / (3.142 / 180));       //Calculate the roll angle
-
-              //Initially, the UAV is at rest, standing still on the ground.
-              angle_pitch_acc -= 0.0;                                              //Accelerometer calibration value for pitch
-              angle_roll_acc -= 0.0;                                               //Accelerometer calibration value for roll
-
-              if(set_gyro_angles){                                                 //If the IMU is already started
-                angle_pitch = angle_pitch * 0.9996 + angle_pitch_acc * 0.0004;     //Correct the drift of the gyro pitch angle with the accelerometer pitch angle
-                angle_roll = angle_roll * 0.9996 + angle_roll_acc * 0.0004;        //Correct the drift of the gyro roll angle with the accelerometer roll angle
+            removeCharsFromString( tmp, " SE");
+            if(read_buffer[i-1] != 'S' | read_buffer[i-1] != 'E'){
+              try{
+                raw_data.push_back(std::stoi(tmp));
               }
-              else{                                                                //At first start
-                angle_pitch = angle_pitch_acc;                                     //Set the gyro pitch angle equal to the accelerometer pitch angle
-                angle_roll = angle_roll_acc;                                       //Set the gyro roll angle equal to the accelerometer roll angle
-                set_gyro_angles = true;                                            //Set the IMU started flag
+              catch (const std::invalid_argument& ia) {
+                //raw_data.push_back(0);
+                std::cout << "Exception thrown: " << ia.what() << std::endl;
               }
-
-              //To dampen the pitch and roll angles a complementary filter is used
-              angle_pitch_output = angle_pitch_output * 0.9 + angle_pitch * 0.1;   //Take 90% of the output pitch value and add 10% of the raw pitch value
-              angle_roll_output = angle_roll_output * 0.9 + angle_roll * 0.1;      //Take 90% of the output roll value and add 10% of the raw roll value
-
-              std::cout << "pitch: " << angle_pitch_output << std::endl;
-              std::cout << "roll: " << angle_roll_output << std::endl;
+              tmp.erase();
             }
           }
+
+        //line end and time for save.
+        if(read_buffer[i] == 'E'){
+          //std::cout << "Detected end of line" << std::endl;
+          gx = raw_data[0];
+          gy = raw_data[1];
+          gz = raw_data[2];
+          ax = raw_data[3];
+          ay = raw_data[4];
+          az = raw_data[5];
+
+
+          /*gx_conv = gx/131.0;
+          gy_conv = gy/131.0;
+          gz_conv = gz/131.0;
+          ax_conv = (ax/2048) * 9.82;
+          ay_conv = (ay/2048) * 9.82;
+          az_conv = (az/2048) * 9.82;*/
+
+          std::cout << "gx: "<< gx;
+          std::cout << ", gy: "<< gy;
+          std::cout << ", gz: "<< gz;
+          std::cout << ", ax: "<< ax;
+          std::cout << ", ay: "<< ay;
+          std::cout << ", az: "<< az << std::endl;
+          /*
+          //Gyro angle calculations
+          // 1 / (8000Hz / 131)
+          angle_pitch += gx * (1 / (8000 / 131)); //Calculate the traveled pitch angle and add this to the angle_pitch variable
+          angle_roll += gy * (1 / (8000 / 131));  //Calculate the traveled roll angle and add this to the angle_roll variable
+
+          //1 / (8000Hz / 131) * (3.142(PI) / 180degr)
+          angle_pitch += angle_roll * sin(gz * ((1 / (8000 / 131)) * (3.142 / 180))); //If the IMU has yawed transfer the roll angle to the pitch angle
+          angle_roll -= angle_pitch * sin(gz * ((1 / (8000 / 131)) * (3.142 / 180))); //If the IMU has yawed transfer the pitch angle to the roll angle
+
+
+          //Accelerometer angle calculations
+          acc_total_vector = sqrt((ax*ax)+(ay*ay)+(az*az));  //Calculate the total accelerometer vector
+
+          //57.296 = 1 / (3.142(PI) / 180)
+          angle_pitch_acc = asin((float)ay / acc_total_vector)* (1 / (3.142 / 180));       //Calculate the pitch angle
+          angle_roll_acc = asin((float)ax / acc_total_vector)* -(1 / (3.142 / 180));       //Calculate the roll angle
+
+          //Initially, the UAV is at rest, standing still on the ground.
+          angle_pitch_acc -= 0.0;                                              //Accelerometer calibration value for pitch
+          angle_roll_acc -= 0.0;                                               //Accelerometer calibration value for roll
+
+          if(set_gyro_angles){                                                 //If the IMU is already started
+            angle_pitch = (angle_pitch * 0.9996) + (angle_pitch_acc * 0.0004);     //Correct the drift of the gyro pitch angle with the accelerometer pitch angle
+            angle_roll = (angle_roll * 0.9996) + (angle_roll_acc * 0.0004);        //Correct the drift of the gyro roll angle with the accelerometer roll angle
+          }
+          else{                                                                //At first start
+            angle_pitch = angle_pitch_acc;                                     //Set the gyro pitch angle equal to the accelerometer pitch angle
+            angle_roll = angle_roll_acc;                                       //Set the gyro roll angle equal to the accelerometer roll angle
+            set_gyro_angles = true;                                            //Set the IMU started flag
+          }
+
+          //To dampen the pitch and roll angles a complementary filter is used
+          angle_pitch_output = (angle_pitch_output * 0.9) + (angle_pitch * 0.1);   //Take 90% of the output pitch value and add 10% of the raw pitch value
+          angle_roll_output = (angle_roll_output * 0.9) + (angle_roll * 0.1);      //Take 90% of the output roll value and add 10% of the raw roll value
+
+          std::cout << "pitch: " << angle_pitch_output  << std::endl;
+          std::cout << "roll: " << angle_roll_output << std::endl;*/
         }
+
+
+
+
+      }
       }
     }
-  }
+
 
   close(fd);                                                       /* Close the serial port */
   return 0;
