@@ -197,7 +197,112 @@ void loop()
   // Formated all values as x, y, and z in order for
   // Compass, Gyro, Acceleration. The First value is
   // the temperature.
-  long acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z, acc_total_vector; 
+ 
+
+  //double dT = ( (double) MPU9150_readSensor(MPU9150_TEMP_OUT_L,MPU9150_TEMP_OUT_H) + 12412.0) / 340.0;
+  //Serial.print(dT);
+  //Serial.print("  ");
+  //Serial.print(MPU9150_readSensor(MPU9150_CMPS_XOUT_L,MPU9150_CMPS_XOUT_H));
+  //Serial.print(" ");
+  //Serial.print(MPU9150_readSensor(MPU9150_CMPS_YOUT_L,MPU9150_CMPS_YOUT_H));
+  //Serial.print(" ");
+  //Serial.print(MPU9150_readSensor(MPU9150_CMPS_ZOUT_L,MPU9150_CMPS_ZOUT_H));
+  //Serial.print(" ");
+
+
+  // Only transmitting gyro and accelerometer data
+  Serial.print("S ");
+  Serial.print(MPU9150_readSensor(MPU9150_GYRO_XOUT_L,MPU9150_GYRO_XOUT_H));
+  Serial.print(" ");
+  Serial.print(MPU9150_readSensor(MPU9150_GYRO_YOUT_L,MPU9150_GYRO_YOUT_H));
+  Serial.print(" ");
+  Serial.print(MPU9150_readSensor(MPU9150_GYRO_ZOUT_L,MPU9150_GYRO_ZOUT_H));
+  Serial.print(" ");
+  Serial.print(MPU9150_readSensor(MPU9150_ACCEL_XOUT_L,MPU9150_ACCEL_XOUT_H));
+  Serial.print(" ");
+  Serial.print(MPU9150_readSensor(MPU9150_ACCEL_YOUT_L,MPU9150_ACCEL_YOUT_H));
+  Serial.print(" ");
+  Serial.print(MPU9150_readSensor(MPU9150_ACCEL_ZOUT_L,MPU9150_ACCEL_ZOUT_H));
+  Serial.print(" ");
+  Serial.print("");
+  Serial.println();
+  delay(100);
+
+}
+
+void MPU9150_setupCompass(){
+  MPU9150_I2C_ADDRESS = 0x0C;      //change Address to Compass
+
+  MPU9150_writeSensor(0x0A, 0x00); //PowerDownMode
+  MPU9150_writeSensor(0x0A, 0x0F); //SelfTest
+  MPU9150_writeSensor(0x0A, 0x00); //PowerDownMode
+
+  MPU9150_I2C_ADDRESS = 0x69;      //change Address to MPU
+
+  MPU9150_writeSensor(0x24, 0x40); //Wait for Data at Slave0
+  MPU9150_writeSensor(0x25, 0x8C); //Set i2c address at slave0 at 0x0C
+  MPU9150_writeSensor(0x26, 0x02); //Set where reading at slave 0 starts
+  MPU9150_writeSensor(0x27, 0x88); //set offset at start reading and enable
+  MPU9150_writeSensor(0x28, 0x0C); //set i2c address at slv1 at 0x0C
+  MPU9150_writeSensor(0x29, 0x0A); //Set where reading at slave 1 starts
+  MPU9150_writeSensor(0x2A, 0x81); //Enable at set length to 1
+  MPU9150_writeSensor(0x64, 0x01); //overvride register
+  MPU9150_writeSensor(0x67, 0x03); //set delay rate
+  MPU9150_writeSensor(0x01, 0x80);
+
+  MPU9150_writeSensor(0x34, 0x04); //set i2c slv4 delay
+  MPU9150_writeSensor(0x64, 0x00); //override register
+  MPU9150_writeSensor(0x6A, 0x00); //clear usr setting
+  MPU9150_writeSensor(0x64, 0x01); //override register
+  MPU9150_writeSensor(0x6A, 0x20); //enable master i2c mode
+  MPU9150_writeSensor(0x34, 0x13); //disable slv4
+}
+
+////////////////////////////////////////////////////////////
+///////// I2C functions to get easier all values ///////////
+////////////////////////////////////////////////////////////
+
+int MPU9150_readSensor(int addrL, int addrH){
+  Wire.beginTransmission(MPU9150_I2C_ADDRESS);
+  Wire.write(addrL);
+  Wire.endTransmission(false);
+
+  Wire.requestFrom(MPU9150_I2C_ADDRESS, 1, true);
+  byte L = Wire.read();
+
+  Wire.beginTransmission(MPU9150_I2C_ADDRESS);
+  Wire.write(addrH);
+  Wire.endTransmission(false);
+
+  Wire.requestFrom(MPU9150_I2C_ADDRESS, 1, true);
+  byte H = Wire.read();
+
+  return (int16_t)((H<<8)+L);
+}
+
+int MPU9150_readSensor(int addr){
+  Wire.beginTransmission(MPU9150_I2C_ADDRESS);
+  Wire.write(addr);
+  Wire.endTransmission(false);
+
+  Wire.requestFrom(MPU9150_I2C_ADDRESS, 1, true);
+  return Wire.read();
+}
+
+int MPU9150_writeSensor(int addr,int data){
+  Wire.beginTransmission(MPU9150_I2C_ADDRESS);
+  Wire.write(addr);
+  Wire.write(data);
+  Wire.endTransmission(true);
+
+  return 1;
+}
+
+
+
+/*
+ * 
+ *  long acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z, acc_total_vector; 
   float angle_pitch, angle_roll;
   boolean set_gyro_angles;
   float angle_roll_acc, angle_pitch_acc;
@@ -230,34 +335,8 @@ void loop()
     //digitalWrite(LED_BUILTIN, LOW);
   }
 
-  //double dT = ( (double) MPU9150_readSensor(MPU9150_TEMP_OUT_L,MPU9150_TEMP_OUT_H) + 12412.0) / 340.0;
-  //Serial.print(dT);
-  //Serial.print("  ");
-  //Serial.print(MPU9150_readSensor(MPU9150_CMPS_XOUT_L,MPU9150_CMPS_XOUT_H));
-  //Serial.print(" ");
-  //Serial.print(MPU9150_readSensor(MPU9150_CMPS_YOUT_L,MPU9150_CMPS_YOUT_H));
-  //Serial.print(" ");
-  //Serial.print(MPU9150_readSensor(MPU9150_CMPS_ZOUT_L,MPU9150_CMPS_ZOUT_H));
-  //Serial.print(" ");
-
-
-  // Only transmitting gyro and accelerometer data
-  Serial.print(MPU9150_readSensor(MPU9150_GYRO_XOUT_L,MPU9150_GYRO_XOUT_H));
-  Serial.print(" ");
-  Serial.print(MPU9150_readSensor(MPU9150_GYRO_YOUT_L,MPU9150_GYRO_YOUT_H));
-  Serial.print(" ");
-  Serial.print(MPU9150_readSensor(MPU9150_GYRO_ZOUT_L,MPU9150_GYRO_ZOUT_H));
-  Serial.print(" ");
-  Serial.print(MPU9150_readSensor(MPU9150_ACCEL_XOUT_L,MPU9150_ACCEL_XOUT_H));
-  Serial.print(" ");
-  Serial.print(MPU9150_readSensor(MPU9150_ACCEL_YOUT_L,MPU9150_ACCEL_YOUT_H));
-  Serial.print(" ");
-  Serial.print(MPU9150_readSensor(MPU9150_ACCEL_ZOUT_L,MPU9150_ACCEL_ZOUT_H));
-  Serial.println();
-
-
-
-  //Gyro angle calculations
+  
+ * //Gyro angle calculations
   //0.0000611 = 1 / (250Hz / 65.5)
   angle_pitch += gyro_x * 0.0000611;                                   //Calculate the traveled pitch angle and add this to the angle_pitch variable
   angle_roll += gyro_y * 0.0000611;                                    //Calculate the traveled roll angle and add this to the angle_roll variable
@@ -344,79 +423,4 @@ void loop()
   }else{
     //noTone(7);
   }
-
-  delay(100);
-
-}
-
-void MPU9150_setupCompass(){
-  MPU9150_I2C_ADDRESS = 0x0C;      //change Address to Compass
-
-  MPU9150_writeSensor(0x0A, 0x00); //PowerDownMode
-  MPU9150_writeSensor(0x0A, 0x0F); //SelfTest
-  MPU9150_writeSensor(0x0A, 0x00); //PowerDownMode
-
-  MPU9150_I2C_ADDRESS = 0x69;      //change Address to MPU
-
-  MPU9150_writeSensor(0x24, 0x40); //Wait for Data at Slave0
-  MPU9150_writeSensor(0x25, 0x8C); //Set i2c address at slave0 at 0x0C
-  MPU9150_writeSensor(0x26, 0x02); //Set where reading at slave 0 starts
-  MPU9150_writeSensor(0x27, 0x88); //set offset at start reading and enable
-  MPU9150_writeSensor(0x28, 0x0C); //set i2c address at slv1 at 0x0C
-  MPU9150_writeSensor(0x29, 0x0A); //Set where reading at slave 1 starts
-  MPU9150_writeSensor(0x2A, 0x81); //Enable at set length to 1
-  MPU9150_writeSensor(0x64, 0x01); //overvride register
-  MPU9150_writeSensor(0x67, 0x03); //set delay rate
-  MPU9150_writeSensor(0x01, 0x80);
-
-  MPU9150_writeSensor(0x34, 0x04); //set i2c slv4 delay
-  MPU9150_writeSensor(0x64, 0x00); //override register
-  MPU9150_writeSensor(0x6A, 0x00); //clear usr setting
-  MPU9150_writeSensor(0x64, 0x01); //override register
-  MPU9150_writeSensor(0x6A, 0x20); //enable master i2c mode
-  MPU9150_writeSensor(0x34, 0x13); //disable slv4
-}
-
-////////////////////////////////////////////////////////////
-///////// I2C functions to get easier all values ///////////
-////////////////////////////////////////////////////////////
-
-int MPU9150_readSensor(int addrL, int addrH){
-  Wire.beginTransmission(MPU9150_I2C_ADDRESS);
-  Wire.write(addrL);
-  Wire.endTransmission(false);
-
-  Wire.requestFrom(MPU9150_I2C_ADDRESS, 1, true);
-  byte L = Wire.read();
-
-  Wire.beginTransmission(MPU9150_I2C_ADDRESS);
-  Wire.write(addrH);
-  Wire.endTransmission(false);
-
-  Wire.requestFrom(MPU9150_I2C_ADDRESS, 1, true);
-  byte H = Wire.read();
-
-  return (int16_t)((H<<8)+L);
-}
-
-int MPU9150_readSensor(int addr){
-  Wire.beginTransmission(MPU9150_I2C_ADDRESS);
-  Wire.write(addr);
-  Wire.endTransmission(false);
-
-  Wire.requestFrom(MPU9150_I2C_ADDRESS, 1, true);
-  return Wire.read();
-}
-
-int MPU9150_writeSensor(int addr,int data){
-  Wire.beginTransmission(MPU9150_I2C_ADDRESS);
-  Wire.write(addr);
-  Wire.write(data);
-  Wire.endTransmission(true);
-
-  return 1;
-}
-
-void blink() {
-  state = !state;
-}
+ */
