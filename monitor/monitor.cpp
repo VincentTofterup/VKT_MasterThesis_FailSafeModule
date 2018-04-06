@@ -72,7 +72,7 @@ int main(){
 
 
 
-  bool set_gyro_angles = false;
+  /*bool set_gyro_angles = false;
 
   float angle_roll_output = 0.0;
   float angle_pitch_output = 0.0;
@@ -81,7 +81,7 @@ int main(){
   float a_roll = 0.0;
   float g_pitch = 0.0;
   float g_roll = 0.0;
-  float g_yaw = 0.0;
+  float g_yaw = 0.0;*/
 
   //Definition of variables for time and integral time calculation
   uint32_t now, lastupdate;
@@ -97,6 +97,9 @@ int main(){
   //roll and pitch are needed in radians for compass tilt compensation
   float pitchRad, rollRad;
   float RadToDeg = (180.0/M_PI);
+
+  float roll_offset = -4.0;
+  float pitch_offset = -16.0;
 
   std::cout << "Entering While Loop" << std::endl;
 
@@ -187,6 +190,8 @@ int main(){
           cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
           cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
 
+
+
           // Converting from raw data to the right units, from datasheet
           cx = (cx * (1229.0/4096.0))  * 1.0;
           cy = (cy * (1229.0/4096.0)) * 1.0;
@@ -232,8 +237,8 @@ int main(){
           dT = (now - lastupdate)/1000000.0;
           lastupdate = std::time(nullptr);
 
-          pitch = a_coeff * (pitch + gy * dT) + (1-a_coeff) * pitchAcc;  // pitch is the rotation around the y-axis
-          roll  = a_coeff * (roll  + gx * dT) + (1-a_coeff) * rollAcc;  // roll is the rotation around the x-axis
+          pitch = (a_coeff * (pitch + gy * dT) + (1-a_coeff) * pitchAcc) ;//- pitch_offset;  // pitch is the rotation around the y-axis
+          roll  = (a_coeff * (roll  + gx * dT) + (1-a_coeff) * rollAcc) ;//- roll_offset;  // roll is the rotation around the x-axis
           // yaw is the rotation around the z-axis. ATTENTION: Simple filtering as for pitch and roll does not work here properly due to the change betwenn 0° - 360° and vice versa
           //       e.g "yaw = a_coeff * yaw + (1-a_coeff) * yawMag;" does not work
           yaw = yawMag;
@@ -270,8 +275,8 @@ int main(){
           angle_pitch_output = (angle_pitch_output * 0.9) + (g_pitch * 0.1);    // Take 90% of the output pitch value and add 10% of the raw pitch value
           angle_roll_output = (angle_roll_output * 0.9) + (g_roll * 0.1);      // Take 90% of the output roll value and add 10% of the raw roll value
 */
-          std::cout << "roll: " << roll << std::endl;
-          std::cout << "pitch: " << pitch << std::endl;
+          std::cout << "roll: " << roll - roll_offset<< std::endl;
+          std::cout << "pitch: " << pitch - pitch_offset<< std::endl;
           std::cout << "yaw: " << yaw << std::endl;
           std::cout << std::endl;
 
