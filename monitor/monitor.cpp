@@ -97,6 +97,8 @@ int main(){
   //roll and pitch are needed in radians for compass tilt compensation
   float pitchRad, rollRad;
   float RadToDeg = (180.0/M_PI);
+  // Declination Angle, can be found on  http://www.magnetic-declination.com/
+  float declinationAngle = 2.59;
 
   float roll_offset = -4.0;
   float pitch_offset = -16.0;
@@ -226,8 +228,8 @@ int main(){
           //yawMag = wrap(mx,my);  //without tilt compensation
           //Serial.print(mx);Serial.print("\t");Serial.print(my);Serial.print("\t");Serial.print(cx_h);Serial.print("\t");Serial.println(cy_h);Serial.println();
 
-          yawMag = yawMag * RadToDeg;
-          //yawMag = yawMag + declinationAngle; // Subtracking the 'Declination Angle' in Deg --> a positive (to east) declination angle has to be subtracked
+          //yawMag = yawMag * RadToDeg;
+          yawMag = yawMag + declinationAngle; // Subtracking the 'Declination Angle' in Deg --> a positive (to east) declination angle has to be subtracked
           //float inclinationAngle = atan(mz/sqrt(mx*mx+my*my))* RadToDeg;
           //Serial.print("Inclination Angle = ");Serial.println(inclinationAngle);
 
@@ -247,34 +249,6 @@ int main(){
 
 
 
-          /*double pitch_offset = 0.0;
-          double roll_offset = 0.0;
-
-          //  calculate pitch (x-axis) and roll (y-axis) angles
-          a_pitch = atan2f(ay, sqrt(pow(ax, 2) + pow(az, 2)) );
-          a_roll = atan2f(-ax, az);
-
-          float dt = 0.01;
-          g_pitch += gx * dt;
-          g_roll -= gy * dt;
-          g_yaw += gz * dt;
-
-
-          if(set_gyro_angles){                                                 //If the IMU is already started
-            g_pitch = (g_pitch * 0.98) + (a_pitch * 0.02) ;//- pitch_offset;     //Correct the drift of the gyro pitch angle with the accelerometer pitch angle
-            g_roll = (g_roll * 0.98) + (a_roll * 0.02) ;//- roll_offset;        //Correct the drift of the gyro roll angle with the accelerometer roll angle
-          }
-          else{                                                                //At first start
-            g_pitch = a_pitch ;//- pitch_offset;                                     //Set the gyro pitch angle equal to the accelerometer pitch angle
-            g_roll = a_roll ;//- roll_offset;                                       //Set the gyro roll angle equal to the accelerometer roll angle
-            set_gyro_angles = true;                                            //Set the IMU started flag
-          }
-
-
-          //To dampen the pitch and roll angles a complementary filter is used
-          angle_pitch_output = (angle_pitch_output * 0.9) + (g_pitch * 0.1);    // Take 90% of the output pitch value and add 10% of the raw pitch value
-          angle_roll_output = (angle_roll_output * 0.9) + (g_roll * 0.1);      // Take 90% of the output roll value and add 10% of the raw roll value
-*/
           std::cout << "roll: " << roll - roll_offset<< std::endl;
           std::cout << "pitch: " << pitch - pitch_offset<< std::endl;
           std::cout << "yaw: " << yaw << std::endl;
