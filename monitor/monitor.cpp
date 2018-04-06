@@ -10,13 +10,23 @@
 #include <math.h>
 #include <algorithm>
 #include <cstring>
-
+#include <ctime>
+#include <chrono>
 #include <unistd.h>
 
-void removeCharsFromString( std::string &str, char* charsToRemove ) {
-   for ( unsigned int i = 0; i < std::strlen(charsToRemove); ++i ) {
-      str.erase( std::remove(str.begin(), str.end(), charsToRemove[i]), str.end() );
-   }
+// Function for correction of yaw angle (replaces the atan2 function for more controll)
+float wrap(float x_h, float y_h){
+  //TODO: Toleranz einbauen
+  float microT_tol = 0.2; //within +-0.2µT the value is set to 270 or 90 deg --> no devision by or near 0 of x_h in arctan function
+  float angle = 0;
+
+  if(x_h < 0) angle = M_PI-atan(y_h/x_h);
+  if(x_h > 0 && y_h < 0) angle = -atan(y_h/x_h);
+  if(x_h > 0 && y_h > 0) angle = 2*M_PI -atan(y_h/x_h);
+  //In case of small values for x_h (no devision by 0) set the angle
+  if(abs(x_h) < microT_tol && y_h < 0) angle = 0.5*M_PI;
+  if(abs(x_h) < microT_tol && y_h > 0) angle = 1.5*M_PI;
+  return angle;
 }
 
 
@@ -62,16 +72,31 @@ int main(){
 
 
 
-  double gx,gy,gz,ax,ay,az;
-  //long gx_conv, gy_conv, gz_conv, ax_conv, ay_conv, az_conv;
-  //float gx_conv_old, gy_conv_old, gz_conv_old, ax_conv_old, ay_conv_old, az_conv_old;
+  bool set_gyro_angles = false;
 
-  //long acc_total_vector;
-  //float angle_pitch, angle_roll, angle_roll_acc, angle_pitch_acc, angle_roll_output, angle_pitch_output;
-  //bool set_gyro_angles = false;
+  float angle_roll_output = 0.0;
+  float angle_pitch_output = 0.0;
 
-  //angle_roll_output = 0.0;
-  //angle_pitch_output =0.0;
+  float a_pitch = 0.0;
+  float a_roll = 0.0;
+  float g_pitch = 0.0;
+  float g_roll = 0.0;
+  float g_yaw = 0.0;
+
+  //Definition of variables for time and integral time calculation
+  uint32_t now, lastupdate;
+  double dT; //need to be precise due to short time intervalls
+  float a_coeff = 0.95; // Coefficient for sensor fusion (how much weight put on the angle integration --> short term trust to gyro)
+  float a_CompFilter = 0.9; // Coefficient for low pass filtering the raw comp data --> e.g. 0.9 is buidling the floating average of the last 10 values(?)
+
+  float pitchAcc, rollAcc, yawMag;  //Define variables for the "raw" angles calculated directly from the Acc values
+  //Define variables for the angles incl. start values. Those angles are in degrees
+  float pitch = 0;
+  float roll = 0;
+  float yaw = 0;
+  //roll and pitch are needed in radians for compass tilt compensation
+  float pitchRad, rollRad;
+  float RadToDeg = (180.0/M_PI);
 
   std::cout << "Entering While Loop" << std::endl;
 
@@ -85,6 +110,9 @@ int main(){
   bool start_line = false;
   int count = 0;
   std::vector <double> raw_data;
+
+  double gx,gy,gz,ax,ay,az,cx,cy,cz, cx_filter, cy_filter, cz_filter, cx_h, cy_h;
+
 
 	bytes_read = read(fd,&read_buffer,256);                           /* Read the data                   */
   //printf("\nBytes Rxed -%d", bytes_read);                           /* Print the number of bytes read */
@@ -107,15 +135,13 @@ int main(){
             //std::cout << "debug2, count = " << count << std::endl;
             count ++;
 
-            if(count == 7){ // end of line check, 7 is because of serial data format
+            if(count == 10){ // end of line check, 7 is because of serial data format
               end_line = true;
               start_line = false;
               count = 0;
             }
-
             try{
               raw_data.push_back(std::stoi(tmp));
-
             }
             catch (const std::invalid_argument& ia) {
               //std::cout << "Exception thrown: " << ia.what() << std::endl;
@@ -128,29 +154,138 @@ int main(){
         if(end_line){
           count = 0;
 
-          gx = raw_data[0];
-          gy = raw_data[1];
-          gz = raw_data[2];
-          ax = raw_data[3];
-          ay = raw_data[4];
-          az = raw_data[5];
+          cx = raw_data[0];
+          cy = raw_data[1];
+          cz = raw_data[2];
+          gx = raw_data[3];
+          gy = raw_data[4];
+          gz = raw_data[5];
+          ax = raw_data[6];
+          ay = raw_data[7];
+          az = raw_data[8];
           //std::cout << "debug5, size = " << raw_data.size() << std::endl;
 
-          // Converting from raw data to the right units, from datasheet
-          gx = gx/131.0;
-          gy = gy/131.0;
-          gz = gz/131.0;
-          ax = (ax/2048) * 9.82;
-          ay = (ay/2048) * 9.82;
-          az = (az/2048) * 9.82;
+          // Possible accelerometer scales (and their register bit settings) are:
+          // 2 G (00), 4 G (01), 8 G (10), and 16 G  (11).
+          #define aRange 2.0       // 2G acceleration resolution (max. sensitivity)
+          #define Ascale 0         // Scale bit setting as 'int' --> e.g. 3 = 0b11 or 1 = 0b01
+          // Possible gyro scales (and their register bit settings) are
+          // 250 °/s (00), 500 °/s (01), 1000 °/s (10), and 2000 °/s  (11).
+          #define gRange 250.0     // 250°/s gyro resolution (max. sensitivity)
+          #define Gscale 0         // Scale bit setting as 'int' --> e.g. 3 = 0b11 or 1 = 0b01
 
-          std::cout << "gx: "<< gx;
+          float accRes = aRange/32768.0;  // 16 bit, 2G --> 0,000061035 g = per LSB
+          float gyroRes = gRange/32768.0; // 16 bit, 250 deg/sec --> = per LSB
+          float compRes = 1229.0/4096.0;  // = 0,3µT per LSB --> 1 Milligauss [mG] =   0,1 Mikrotesla [µT]
+
+
+
+
+
+          // Low-Pass Filter the magnetic raw data in x, y, z since a filter later is not so easy to implement
+          cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
+          cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
+          cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
+
+          // Converting from raw data to the right units, from datasheet
+          cx = (cx * (1229.0/4096.0))  * 1.0;
+          cy = (cy * (1229.0/4096.0)) * 1.0;
+          cz = cz * (1229.0/4096.0);
+          gx = gx * (gRange/32768.0); //gx/131.0; // degrees pr sec.
+          gy = gy * (gRange/32768.0); // gy/131.0;
+          gz = (gz * (gRange/32768.0)) * 1.0; // gz/131.0;
+          ax = ax * (aRange/32768.0);//(ax/2048) * 9.82; // meters pr sec, with the +/-16G resolution
+          ay = ay * (aRange/32768.0);//(ay/2048) * 9.82;
+          az = az * (aRange/32768.0); //(az/2048) * 9.82;
+
+
+
+          /*** Angle Calculation and Sensor Fusion ***/
+          //Angle calculation from accelerometer. x-Axis pointing to front (ATTENTION: IS THE PRINTED Y-AXIS ON THE SENSOR!)
+          pitchAcc = atan2(ax, az); // pitch is angle between x-axis and z-axis
+          pitchAcc = -pitchAcc * RadToDeg;      // pitch is positiv upwards (climb) --> Invert the angle!
+
+          rollAcc = atan2(ay, az); // roll is angle between y-axis and z-axis
+          rollAcc = rollAcc * RadToDeg;         // roll is clockwise positiv to the right (rotation clockwise in flight direction)
+
+          // Calculation of the heading
+
+          // With tilt compensation
+          // Takes raw magnetometer values, pitch and roll and turns it into a tilt-compensated heading value ranging from -pi to pi (everything in this function should be in radians).
+          // Basically we first "unturn" the roll-angle and then the pitch to have mx and my in the horizontal plane again
+          pitchRad = -pitch/RadToDeg;  //angles have to be inverted again for unturing from actual plane to horizontal plane
+          rollRad = -roll/RadToDeg;
+          cx_h = cx*cos(pitchRad) + cy*sin(rollRad)*sin(pitchRad) - cz*cos(rollRad)*sin(pitchRad);
+          cy_h = cy*cos(rollRad) + cz*sin(rollRad);
+          yawMag = wrap(cx_h, cy_h);
+          //yawMag = wrap(mx,my);  //without tilt compensation
+          //Serial.print(mx);Serial.print("\t");Serial.print(my);Serial.print("\t");Serial.print(cx_h);Serial.print("\t");Serial.println(cy_h);Serial.println();
+
+          yawMag = yawMag * RadToDeg;
+          //yawMag = yawMag + declinationAngle; // Subtracking the 'Declination Angle' in Deg --> a positive (to east) declination angle has to be subtracked
+          //float inclinationAngle = atan(mz/sqrt(mx*mx+my*my))* RadToDeg;
+          //Serial.print("Inclination Angle = ");Serial.println(inclinationAngle);
+
+
+          //Sensor fusion
+          now = std::time(nullptr);
+          dT = (now - lastupdate)/1000000.0;
+          lastupdate = std::time(nullptr);
+
+          pitch = a_coeff * (pitch + gy * dT) + (1-a_coeff) * pitchAcc;  // pitch is the rotation around the y-axis
+          roll  = a_coeff * (roll  + gx * dT) + (1-a_coeff) * rollAcc;  // roll is the rotation around the x-axis
+          // yaw is the rotation around the z-axis. ATTENTION: Simple filtering as for pitch and roll does not work here properly due to the change betwenn 0° - 360° and vice versa
+          //       e.g "yaw = a_coeff * yaw + (1-a_coeff) * yawMag;" does not work
+          yaw = yawMag;
+          if(yaw>360) yaw = yaw-360; //care for the change from 0-->360 or 360-->0 near to north
+          if(yaw<0)yaw = yaw+360;
+
+
+
+          /*double pitch_offset = 0.0;
+          double roll_offset = 0.0;
+
+          //  calculate pitch (x-axis) and roll (y-axis) angles
+          a_pitch = atan2f(ay, sqrt(pow(ax, 2) + pow(az, 2)) );
+          a_roll = atan2f(-ax, az);
+
+          float dt = 0.01;
+          g_pitch += gx * dt;
+          g_roll -= gy * dt;
+          g_yaw += gz * dt;
+
+
+          if(set_gyro_angles){                                                 //If the IMU is already started
+            g_pitch = (g_pitch * 0.98) + (a_pitch * 0.02) ;//- pitch_offset;     //Correct the drift of the gyro pitch angle with the accelerometer pitch angle
+            g_roll = (g_roll * 0.98) + (a_roll * 0.02) ;//- roll_offset;        //Correct the drift of the gyro roll angle with the accelerometer roll angle
+          }
+          else{                                                                //At first start
+            g_pitch = a_pitch ;//- pitch_offset;                                     //Set the gyro pitch angle equal to the accelerometer pitch angle
+            g_roll = a_roll ;//- roll_offset;                                       //Set the gyro roll angle equal to the accelerometer roll angle
+            set_gyro_angles = true;                                            //Set the IMU started flag
+          }
+
+
+          //To dampen the pitch and roll angles a complementary filter is used
+          angle_pitch_output = (angle_pitch_output * 0.9) + (g_pitch * 0.1);    // Take 90% of the output pitch value and add 10% of the raw pitch value
+          angle_roll_output = (angle_roll_output * 0.9) + (g_roll * 0.1);      // Take 90% of the output roll value and add 10% of the raw roll value
+*/
+          std::cout << "roll: " << roll << std::endl;
+          std::cout << "pitch: " << pitch << std::endl;
+          std::cout << "yaw: " << yaw << std::endl;
+          std::cout << std::endl;
+
+
+          /*std::cout << "cx: " << cx_filter;
+          std::cout << ", cy: "<< cy_filter;
+          std::cout << ", cz: "<< cz_filter;
+          std::cout << ", gx: "<< gx;
           std::cout << ", gy: "<< gy;
           std::cout << ", gz: "<< gz;
           std::cout << ", ax: "<< ax;
           std::cout << ", ay: "<< ay;
           std::cout << ", az: "<< az << std::endl;
-
+          std::cout << std::endl;*/
 
 
           // Here to call the rpy method to recieve rpy
@@ -163,45 +298,3 @@ int main(){
   close(fd);                                                       /* Close the serial port */
   return 0;
 }
-
-
-
-
-/*
-//Gyro angle calculations
-// 1 / (8000Hz / 131)
-angle_pitch += gx * (1 / (8000 / 131)); //Calculate the traveled pitch angle and add this to the angle_pitch variable
-angle_roll += gy * (1 / (8000 / 131));  //Calculate the traveled roll angle and add this to the angle_roll variable
-
-//1 / (8000Hz / 131) * (3.142(PI) / 180degr)
-angle_pitch += angle_roll * sin(gz * ((1 / (8000 / 131)) * (3.142 / 180))); //If the IMU has yawed transfer the roll angle to the pitch angle
-angle_roll -= angle_pitch * sin(gz * ((1 / (8000 / 131)) * (3.142 / 180))); //If the IMU has yawed transfer the pitch angle to the roll angle
-
-
-//Accelerometer angle calculations
-acc_total_vector = sqrt((ax*ax)+(ay*ay)+(az*az));  //Calculate the total accelerometer vector
-
-//57.296 = 1 / (3.142(PI) / 180)
-angle_pitch_acc = asin((float)ay / acc_total_vector)* (1 / (3.142 / 180));       //Calculate the pitch angle
-angle_roll_acc = asin((float)ax / acc_total_vector)* -(1 / (3.142 / 180));       //Calculate the roll angle
-
-//Initially, the UAV is at rest, standing still on the ground.
-angle_pitch_acc -= 0.0;                                              //Accelerometer calibration value for pitch
-angle_roll_acc -= 0.0;                                               //Accelerometer calibration value for roll
-
-if(set_gyro_angles){                                                 //If the IMU is already started
-  angle_pitch = (angle_pitch * 0.9996) + (angle_pitch_acc * 0.0004);     //Correct the drift of the gyro pitch angle with the accelerometer pitch angle
-  angle_roll = (angle_roll * 0.9996) + (angle_roll_acc * 0.0004);        //Correct the drift of the gyro roll angle with the accelerometer roll angle
-}
-else{                                                                //At first start
-  angle_pitch = angle_pitch_acc;                                     //Set the gyro pitch angle equal to the accelerometer pitch angle
-  angle_roll = angle_roll_acc;                                       //Set the gyro roll angle equal to the accelerometer roll angle
-  set_gyro_angles = true;                                            //Set the IMU started flag
-}
-
-//To dampen the pitch and roll angles a complementary filter is used
-angle_pitch_output = (angle_pitch_output * 0.9) + (angle_pitch * 0.1);   //Take 90% of the output pitch value and add 10% of the raw pitch value
-angle_roll_output = (angle_roll_output * 0.9) + (angle_roll * 0.1);      //Take 90% of the output roll value and add 10% of the raw roll value
-
-std::cout << "pitch: " << angle_pitch_output  << std::endl;
-std::cout << "roll: " << angle_roll_output << std::endl;*/
