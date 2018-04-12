@@ -13,10 +13,10 @@
 #include <ctime>
 #include <chrono>
 #include <unistd.h>
+//#include "mavlink_pos.c"
 
 // Function for correction of yaw angle (replaces the atan2 function for more controll)
 float wrap(float x_h, float y_h){
-  //TODO: Toleranz einbauen
   float microT_tol = 0.2; //within +-0.2µT the value is set to 270 or 90 deg --> no devision by or near 0 of x_h in arctan function
   float angle = 0;
 
@@ -70,210 +70,374 @@ int main(){
 	  printf("\n  ERROR ! in Setting attributes");
 	}
 
+  // Possible accelerometer scales (and their register bit settings) are:
+  // 2 G (00), 4 G (01), 8 G (10), and 16 G  (11).
+  float aRange = 2.0;       // 2G acceleration resolution (max. sensitivity)
+  float Ascale = 0.0;         // Scale bit setting as 'int' --> e.g. 3 = 0b11 or 1 = 0b01
+  // Possible gyro scales (and their register bit settings) are
+  // 250 °/s (00), 500 °/s (01), 1000 °/s (10), and 2000 °/s  (11).
+  float gRange = 250.0;     // 250°/s gyro resolution (max. sensitivity)
+  float Gscale = 0.0;         // Scale bit setting as 'int' --> e.g. 3 = 0b11 or 1 = 0b01
 
-
-  /*bool set_gyro_angles = false;
-
-  float angle_roll_output = 0.0;
-  float angle_pitch_output = 0.0;
-
-  float a_pitch = 0.0;
-  float a_roll = 0.0;
-  float g_pitch = 0.0;
-  float g_roll = 0.0;
-  float g_yaw = 0.0;*/
+  float accRes = aRange/32768.0;  // 16 bit, 2G --> 0,000061035 g = per LSB
+  float gyroRes = gRange/32768.0; // 16 bit, 250 deg/sec --> = per LSB
+  float compRes = 1229.0/4096.0;  // = 0,3µT per LSB --> 1 Milligauss [mG] =   0,1 Mikrotesla [µT]
+  float magBias[3] = {1.8, 7.0, 8.0}; // found in arduino code, finds all these calibrations values, and does factory test in initialization
+  float magCalib[3] = {1.12, 1.14, 1.18}; // found in arduino code
 
   //Definition of variables for time and integral time calculation
-  uint32_t now, lastupdate;
+  uint32_t now, lastupdate, start, end;
   double dT; //need to be precise due to short time intervalls
   float a_coeff = 0.95; // Coefficient for sensor fusion (how much weight put on the angle integration --> short term trust to gyro)
   float a_CompFilter = 0.9; // Coefficient for low pass filtering the raw comp data --> e.g. 0.9 is buidling the floating average of the last 10 values(?)
 
   float pitchAcc, rollAcc, yawMag;  //Define variables for the "raw" angles calculated directly from the Acc values
   //Define variables for the angles incl. start values. Those angles are in degrees
-  float pitch = 0;
-  float roll = 0;
-  float yaw = 0;
+  float pitch = 0.0;
+  float roll = 0.0;
+  float yaw = 0.0;
+  float hdm = 0.0;
   //roll and pitch are needed in radians for compass tilt compensation
   float pitchRad, rollRad;
   float RadToDeg = (180.0/M_PI);
   // Declination Angle, can be found on  http://www.magnetic-declination.com/
   float declinationAngle = 2.59;
 
-  float roll_offset = -4.0;
-  float pitch_offset = -16.0;
+  float roll_offset = 2.5;
+  float pitch_offset = 0.2;
+
+
+  // thau observer varibles:
+
+  double pos[3];
+  double old_pos[3];
+  double state[12];
+  double old_state[12];
+  double Px[12];
+  double old_Px[12];
+  double Pxdot[12];
+  double old_Pxdot[12];
+  // Initial state estimate is 0.0 in each state
+  for (int i = 0; i < 12; i++) {
+    Pxdot[i] = 0.0;
+    old_Pxdot[i] = 0.0;
+    Px[i] = 0.0;
+    old_Px[i] = 0.0;
+
+  }
+  std::cout << "Initial Pxdot: ";
+  for (int i = 0; i < 12; i++) {
+    std::cout << Pxdot[i] << ", ";
+  }
+  std::cout << std::endl;
+  std::cout << "Initial Px: ";
+  for (int i = 0; i < 12; i++) {
+    std::cout << Px[i] << ", ";
+  }
+  std::cout << std::endl;
+
+  int firstrun = 1;
+
+  float A[12][12];
+  float C[9][12];
+
+  for(int x=0;x<9;x++){ // rows
+    for(int y=0;y<12;y++){ // columns
+      C[x][y]=0.0;
+    }
+  }
+  //[row][column]
+  C[0][0] = 1.0; C[1][1] = 1.0; C[2][2] = 1.0; C[3][3] = 1.0;  C[4][4] = 1.0; C[5][5] = 1.0; C[6][9] = 1.0; C[7][10] = 1.0; C[8][11] = 1.0;
+
+  for(int x=0;x<12;x++){ // rows
+    for(int y=0;y<12;y++){ // columns
+      A[x][y]=0.0;
+    }
+  }
+  //[row][column]
+  A[0][3] = 1.0; A[1][4] = 1.0; A[2][5] = 1.0; A[9][6] = 1.0; A[10][7] = 1.0; A[11][8] = 1.0;
+
 
   std::cout << "Entering While Loop" << std::endl;
 
   while(true){
-  tcflush(fd, TCIFLUSH);                                            /* Discards old data in the rx buffer            */
+    tcflush(fd, TCIFLUSH);                                            /* Discards old data in the rx buffer            */
 
-	char read_buffer[256];                                            /* Buffer to store the data received              */
-	int  bytes_read = 0;                                              /* Number of bytes read by the read() system call */
-	int i = 0;
-  bool end_line = false;
-  bool start_line = false;
-  int count = 0;
-  std::vector <double> raw_data;
+    char read_buffer[256];                                            /* Buffer to store the data received              */
+    int  bytes_read = 0;                                              /* Number of bytes read by the read() system call */
+    int i = 0;
+    bool end_line = false;
+    bool start_line = false;
+    int count = 0;
+    std::vector <double> raw_data;
 
-  double gx,gy,gz,ax,ay,az,cx,cy,cz, cx_filter, cy_filter, cz_filter, cx_h, cy_h;
+    double gx,gy,gz,ax,ay,az,cx,cy,cz, cx_filter, cy_filter, cz_filter, cx_h, cy_h;
 
 
-	bytes_read = read(fd,&read_buffer,256);                           /* Read the data                   */
-  //printf("\nBytes Rxed -%d", bytes_read);                           /* Print the number of bytes read */
+    bytes_read = read(fd,&read_buffer,256);                             /* Read the data                   */
+    //printf("\nBytes Rxed -%d", bytes_read);                           /* Print the number of bytes read */
 
-  if(bytes_read > 1){
+    if(bytes_read > 1){
 
-    std::string tmp;
-      for(i=0;i<bytes_read;i++){	                                    /* Write only the received characters*/
+      std::string tmp;
+        for(i=0;i<bytes_read;i++){	                                    /* Write only the received characters*/
 
-        if(read_buffer[i] == 'S'){
-          end_line = false;
-          start_line = true;
-        }
-
-        if(start_line){
-          tmp+=read_buffer[i];
-          //std::cout << "debug1" << std::endl;
-
-          if((read_buffer[i] == ' ' )){//| read_buffer[i] == 'S')){
-            //std::cout << "debug2, count = " << count << std::endl;
-            count ++;
-
-            if(count == 10){ // end of line check, 7 is because of serial data format
-              end_line = true;
-              start_line = false;
-              count = 0;
-            }
-            try{
-              raw_data.push_back(std::stoi(tmp));
-            }
-            catch (const std::invalid_argument& ia) {
-              //std::cout << "Exception thrown: " << ia.what() << std::endl;
-            }
-            tmp.erase();
+          if(read_buffer[i] == 'S'){
+            end_line = false;
+            start_line = true;
           }
-        }
-        //std::cout << "debug3" << std::endl;
 
-        if(end_line){
-          count = 0;
+          if(start_line){
+            tmp+=read_buffer[i];
 
-          cx = raw_data[0];
-          cy = raw_data[1];
-          cz = raw_data[2];
-          gx = raw_data[3];
-          gy = raw_data[4];
-          gz = raw_data[5];
-          ax = raw_data[6];
-          ay = raw_data[7];
-          az = raw_data[8];
-          //std::cout << "debug5, size = " << raw_data.size() << std::endl;
+            if((read_buffer[i] == ' ' )){
+              count ++;
 
-          // Possible accelerometer scales (and their register bit settings) are:
-          // 2 G (00), 4 G (01), 8 G (10), and 16 G  (11).
-          #define aRange 2.0       // 2G acceleration resolution (max. sensitivity)
-          #define Ascale 0         // Scale bit setting as 'int' --> e.g. 3 = 0b11 or 1 = 0b01
-          // Possible gyro scales (and their register bit settings) are
-          // 250 °/s (00), 500 °/s (01), 1000 °/s (10), and 2000 °/s  (11).
-          #define gRange 250.0     // 250°/s gyro resolution (max. sensitivity)
-          #define Gscale 0         // Scale bit setting as 'int' --> e.g. 3 = 0b11 or 1 = 0b01
+              if(count == 10){ // end of line check, 7 is because of serial data format
+                end_line = true;
+                start_line = false;
+                count = 0;
+              }
+              try{
+                raw_data.push_back(std::stoi(tmp));
+              }
+              catch (const std::invalid_argument& ia) {
+                //std::cout << "Exception thrown: " << ia.what() << std::endl;
+              }
+              tmp.erase();
+            }
+          }
+          if(end_line){
+            count = 0;
 
-          float accRes = aRange/32768.0;  // 16 bit, 2G --> 0,000061035 g = per LSB
-          float gyroRes = gRange/32768.0; // 16 bit, 250 deg/sec --> = per LSB
-          float compRes = 1229.0/4096.0;  // = 0,3µT per LSB --> 1 Milligauss [mG] =   0,1 Mikrotesla [µT]
+            cx = raw_data[0];
+            cy = raw_data[1];
+            cz = raw_data[2];
+            gx = raw_data[3];
+            gy = raw_data[4];
+            gz = raw_data[5];
+            ax = raw_data[6];
+            ay = raw_data[7];
+            az = raw_data[8];
 
-
-
-
-
-          // Low-Pass Filter the magnetic raw data in x, y, z since a filter later is not so easy to implement
-          cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
-          cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
-          cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
-
-
-
-          // Converting from raw data to the right units, from datasheet
-          cx = (cx * (1229.0/4096.0))  * 1.0;
-          cy = (cy * (1229.0/4096.0)) * 1.0;
-          cz = cz * (1229.0/4096.0);
-          gx = gx * (gRange/32768.0); //gx/131.0; // degrees pr sec.
-          gy = gy * (gRange/32768.0); // gy/131.0;
-          gz = (gz * (gRange/32768.0)) * 1.0; // gz/131.0;
-          ax = ax * (aRange/32768.0);//(ax/2048) * 9.82; // meters pr sec, with the +/-16G resolution
-          ay = ay * (aRange/32768.0);//(ay/2048) * 9.82;
-          az = az * (aRange/32768.0); //(az/2048) * 9.82;
+            // Low-Pass Filter the magnetic raw data in x, y, z since a filter later is not so easy to implement
+            cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
+            cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
+            cx_filter = a_CompFilter * cx_filter + (1-a_CompFilter) * cx;
 
 
-
-          /*** Angle Calculation and Sensor Fusion ***/
-          //Angle calculation from accelerometer. x-Axis pointing to front (ATTENTION: IS THE PRINTED Y-AXIS ON THE SENSOR!)
-          pitchAcc = atan2(ax, az); // pitch is angle between x-axis and z-axis
-          pitchAcc = -pitchAcc * RadToDeg;      // pitch is positiv upwards (climb) --> Invert the angle!
-
-          rollAcc = atan2(ay, az); // roll is angle between y-axis and z-axis
-          rollAcc = rollAcc * RadToDeg;         // roll is clockwise positiv to the right (rotation clockwise in flight direction)
-
-          // Calculation of the heading
-
-          // With tilt compensation
-          // Takes raw magnetometer values, pitch and roll and turns it into a tilt-compensated heading value ranging from -pi to pi (everything in this function should be in radians).
-          // Basically we first "unturn" the roll-angle and then the pitch to have mx and my in the horizontal plane again
-          pitchRad = -pitch/RadToDeg;  //angles have to be inverted again for unturing from actual plane to horizontal plane
-          rollRad = -roll/RadToDeg;
-          cx_h = cx*cos(pitchRad) + cy*sin(rollRad)*sin(pitchRad) - cz*cos(rollRad)*sin(pitchRad);
-          cy_h = cy*cos(rollRad) + cz*sin(rollRad);
-          yawMag = wrap(cx_h, cy_h);
-          //yawMag = wrap(mx,my);  //without tilt compensation
-          //Serial.print(mx);Serial.print("\t");Serial.print(my);Serial.print("\t");Serial.print(cx_h);Serial.print("\t");Serial.println(cy_h);Serial.println();
-
-          //yawMag = yawMag * RadToDeg;
-          yawMag = yawMag + declinationAngle; // Subtracking the 'Declination Angle' in Deg --> a positive (to east) declination angle has to be subtracked
-          //float inclinationAngle = atan(mz/sqrt(mx*mx+my*my))* RadToDeg;
-          //Serial.print("Inclination Angle = ");Serial.println(inclinationAngle);
+            // Converting from raw data to the right units, from datasheet
+            cx = ((cx_filter * (1229.0/4096.0)) * magCalib[0]) - magBias[0];
+            cy = ((cy_filter * (1229.0/4096.0)) * magCalib[1]) - magBias[1];
+            cz = ((cz_filter * (1229.0/4096.0)) * magCalib[2])- magBias[2];
+            gx = gx * (gRange/32768.0); //gx/131.0; // degrees pr sec.
+            gy = gy * (gRange/32768.0); // gy/131.0;
+            gz = (gz * (gRange/32768.0)) * -1.0; // gz/131.0;
+            ax = ax * (aRange/32768.0)  * -1.0;//(ax/2048) * 9.82; // meters pr sec, with the +/-16G resolution
+            ay = ay * (aRange/32768.0) * -1.0 ;//(ay/2048) * 9.82;
+            az = az * (aRange/32768.0); //(az/2048) * 9.82;
 
 
-          //Sensor fusion
-          now = std::time(nullptr);
-          dT = (now - lastupdate)/1000000.0;
-          lastupdate = std::time(nullptr);
+            /*** Angle Calculation and Sensor Fusion ***/
+            //Angle calculation from accelerometer. x-Axis pointing to front (ATTENTION: IS THE PRINTED Y-AXIS ON THE SENSOR!)
+            pitchAcc = atan2(ay, az);             // pitch is angle between x-axis and z-axis
+            pitchAcc = -pitchAcc * RadToDeg;      // pitch is positiv upwards (climb) --> Invert the angle!
 
-          pitch = (a_coeff * (pitch + gy * dT) + (1-a_coeff) * pitchAcc) ;//- pitch_offset;  // pitch is the rotation around the y-axis
-          roll  = (a_coeff * (roll  + gx * dT) + (1-a_coeff) * rollAcc) ;//- roll_offset;  // roll is the rotation around the x-axis
-          // yaw is the rotation around the z-axis. ATTENTION: Simple filtering as for pitch and roll does not work here properly due to the change betwenn 0° - 360° and vice versa
-          //       e.g "yaw = a_coeff * yaw + (1-a_coeff) * yawMag;" does not work
-          yaw = yawMag;
-          if(yaw>360) yaw = yaw-360; //care for the change from 0-->360 or 360-->0 near to north
-          if(yaw<0)yaw = yaw+360;
+            rollAcc = atan2(ax, az);              // roll is angle between y-axis and z-axis
+            rollAcc = rollAcc * RadToDeg;         // roll is clockwise positiv to the right (rotation clockwise in flight direction)
+
+            // Calculation of the heading
+
+            // With tilt compensation
+            // Takes raw magnetometer values, pitch and roll and turns it into a tilt-compensated heading value ranging from -pi to pi (everything in this function should be in radians).
+            // Basically we first "unturn" the roll-angle and then the pitch to have mx and my in the horizontal plane again
+            pitchRad = -pitch/RadToDeg;            //angles have to be inverted again for unturing from actual plane to horizontal plane
+            rollRad = -roll/RadToDeg;
+            cx_h = cx*cos(pitchRad) + cy*sin(rollRad)*sin(pitchRad) - cz*cos(rollRad)*sin(pitchRad);
+            cy_h = cy*cos(rollRad) + cz*sin(rollRad);
+            yawMag = wrap(cx_h, cy_h);
+            //yawMag = wrap(cx,cy);  //without tilt compensation
+
+            yawMag = yawMag * RadToDeg;
+            //yawMag = (yawMag + declinationAngle); //* RadToDeg; // Subtracking the 'Declination Angle' in Deg --> a positive (to east) declination angle has to be subtracked
+
+            //Sensor fusion
+            now = std::time(nullptr);
+            dT = (now - lastupdate)/10000000.0;
+            lastupdate = std::time(nullptr);
+
+            pitch = (a_coeff * (pitch + gy * dT) + (1-a_coeff) * pitchAcc); //- pitch_offset;  // pitch is the rotation around the y-axis
+            roll  = (a_coeff * (roll  + gx * dT) + (1-a_coeff) * rollAcc);  //- roll_offset;  // roll is the rotation around the x-axis
+            // yaw is the rotation around the z-axis. ATTENTION: Simple filtering as for pitch and roll does not work here properly due to the change betwenn 0° - 360° and vice versa
+            // e.g "yaw = a_coeff * yaw + (1-a_coeff) * yawMag;" does not work
+            yaw = yawMag;
+
+            //yaw = atan(cy/cx) * RadToDeg;
+            if(yaw>360)
+              yaw = yaw-360; //care for the change from 0-->360 or 360-->0 near to north
+            if(yaw<0)
+              yaw = yaw+360;
+
+            float degTorad = (2 * M_PI) / 360;
 
 
 
-          std::cout << "roll: " << roll - roll_offset<< std::endl;
-          std::cout << "pitch: " << pitch - pitch_offset<< std::endl;
-          std::cout << "yaw: " << yaw << std::endl;
-          std::cout << std::endl;
+            /*std::cout << "roll: " << roll - roll_offset<< std::endl;
+            std::cout << "pitch: " << pitch - pitch_offset<< std::endl;
+            std::cout << "yaw: " << yaw  << std::endl;
+            std::cout << std::endl;*/
 
 
-          /*std::cout << "cx: " << cx_filter;
-          std::cout << ", cy: "<< cy_filter;
-          std::cout << ", cz: "<< cz_filter;
-          std::cout << ", gx: "<< gx;
-          std::cout << ", gy: "<< gy;
-          std::cout << ", gz: "<< gz;
-          std::cout << ", ax: "<< ax;
-          std::cout << ", ay: "<< ay;
-          std::cout << ", az: "<< az << std::endl;
-          std::cout << std::endl;*/
+            // Thau Observer
+
+            pos[0] = 587310.88; pos[1] = 6139948.83; pos[2] = 50.0; // Position in Odense C, lon: 55.398020 lat: 10.378631 converted to UTM with zone 32U
+            old_pos[0] = 587310.88; old_pos[1] = 6139948.83; old_pos[2] = 50.0;
+
+            start = std::time(nullptr);
+            float dt = (start - end)/10000.0;
+            end = std::time(nullptr);
+            dt = 1.0;
+            //std::cout.precision(17);
+            //std::cout << "dt: " << dt << std::endl;
+
+            if (firstrun == 1) { // first run
+              state[0] = (roll-roll_offset) * degTorad;
+              state[1] = (pitch-pitch_offset) * degTorad;
+              state[2] = yaw * degTorad;
+              state[3] = 0;
+              state[4] = 0;
+              state[5] = 0;
+              state[6] = 0;
+              state[7] = 0;
+              state[8] = 0;
+              state[9] = pos[0];
+              state[10] = pos[1];
+              state[11] = pos[2];
+            }
+            if(firstrun == 2){ // actual state, that has correct velocities calculated, with dt = 0.0005
+              state[0] = (roll-roll_offset) * degTorad;
+              state[1] = (pitch-pitch_offset) * degTorad;
+              state[2] = yaw * degTorad;
+              state[3] = (state[0]-old_state[0])/dt;
+              state[4] = (state[1]-old_state[1])/dt;
+              state[5] = (state[2]-old_state[2])/dt;
+              state[6] = (pos[0]-old_pos[0])/dt;
+              state[7] = (pos[1]-old_pos[1])/dt;
+              state[8] = (pos[2]-old_pos[2])/dt;
+              state[9] = pos[0];
+              state[10] = pos[1];
+              state[11] = pos[2];
+            }
+
+            // parameters
+            float g = 9.81;
+            float m = 1.0; // Kg;
+            float L = 0.3; // m
+            float k = 1.5e-6; // thrust coefficient
+            float b = 1e-7; // drag coefficient
+            float Ix = 5e-3;  // Kgm^2
+            float Iy = 5e-3;  // Kgm^2
+            float Iz = 10e-3; // Kgm^2
+
+            float omega1 = 100.0;
+            float omega2 = 100.0;
+            float omega3 = 100.0;
+            float omega4 = 100.0;
+
+            // force and torque
+            float ft = k*(pow(omega1,2)+pow(omega2,2)+pow(omega3,2)+pow(omega4,2)); // T_B
+            float taux = k*L*(pow(omega3,2)-pow(omega1,2));
+            float tauy = k*L*(pow(omega4,2)-pow(omega2,2));
+            float tauz = b*(pow(omega2,2)+pow(omega4,2)-pow(omega1,2)-pow(omega3,2));
 
 
-          // Here to call the rpy method to recieve rpy
-          // next to call xyz method
-          // With rpy and xyz, call model based fail detection algorithm with rpy as arguments.
+            // State Estimate, from matlab:
+            Pxdot[0] = (Px[3] + Px[5] * Px[1] + Px[4] * Px[0] * Px[1]); // Px(4)+Px(6)*Px(2)+Px(5)*Px(1)*Px(2)
+            Pxdot[1] = (Px[4] - Px[5] * Px[0]); // Px(5)-Px(6)*Px(1)
+            Pxdot[2] = (Px[5] + Px[4] * Px[0]); // Px(6)+Px(5)*Px(1)
+            Pxdot[3] = (((Iy-Iz)/Ix) * Px[5] * Px[4] + (taux/Ix));  // ((Iy-Iz)/Ix)*Px(6)*Px(5)+(tauxP/Ix)
+            Pxdot[4] = (((Iz-Ix)/Iy) * Px[3] * Px[5] + (tauy/Iy));  // ((Iz-Ix)/Iy)*Px(4)*Px(6)+(tauyP/Iy)
+            Pxdot[5] = (((Ix-Iy)/Iz) * Px[3] * Px[4] + (tauz/Iz));  // ((Ix-Iy)/Iz)*Px(4)*Px(5)+(tauzP/Iz)
+            Pxdot[6] = (Px[5] * Px[7] - Px[4] * Px[10] - (g * Px[1]));  // Px(6)*Px(8)-Px(5)*Px(11)-g*Px(2)
+            Pxdot[7] = (Px[3] * Px[8] - Px[5] * Px[6] + (g * Px[0])); // Px(4)*Px(9)-Px(6)*Px(7)+g*Px(1)
+            Pxdot[8] = (Px[4] * Px[6] - Px[3] * Px[7] + (g * (ft/m)));  // Px(5)*Px(7)-Px(4)*Px(8)+g*(ftP/m)
+            Pxdot[9] = (Px[8] * (Px[0] * Px[2] + Px[1]) - Px[7] * (Px[2] - Px[0] * Px[1]) + Px[6]); // Px(9)*(Px(1)*Px(3)+Px(2))-Px(8)*(Px(3)-Px(1)*Px(2))+Px(7)
+            Pxdot[10] = (Px[7] * (1 + Px[0] * Px[1] * Px[2]) - Px[8] * (Px[0] - Px[1] * Px[2]) + Px[6] * Px[2]);  // Px(8)*(1+Px(1)*Px(2)*Px(3))-Px(9)*(Px(1)-Px(2)*Px(3))+Px(7)*Px(3)
+            Pxdot[11] = (Px[8] - Px[6] * Px[1] + Px[7] * Px[0]); // Px(9)-Px(7)*Px(2)+Px(8)*Px(1)
+
+
+            // Matlab functions for the following:
+            //PThau = lyap((A+0.5*eye(12))',-C'*C);
+            //PThau = inv(PThau)*C';
+            // Just copy pasted from matlab solution:
+            // Turns out, that these is not really needed, Px is just written out for each element equation
+
+            // State estimate update, first Pxdot, then Px.
+            // Pxdot = Pxdot + PThau*(C*x-C*Px);
+            // Px    = Px + Pxdot * dt;
+
+            Px[0] = Px[0] + ((Pxdot[0] + (1.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
+            Px[1] = Px[1] + ((Pxdot[1] + (1.5 * (state[1] - Px[1]) + 0.5 * (state[4] - Px[4]))) * dt);
+            Px[2] = Px[2] + ((Pxdot[2] + (1.5 * (state[2] - Px[2]) + 0.5 * (state[5] - Px[5]))) * dt);
+            Px[3] = Px[3] + ((Pxdot[3] + (0.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
+            Px[4] = Px[4] + ((Pxdot[4] + (0.5 * (state[1] - Px[1]) + 0.5 * (state[4] - Px[4]))) * dt);
+            Px[5] = Px[5] + ((Pxdot[5] + (0.5 * (state[2] - Px[2]) + 0.5 * (state[5] - Px[5]))) * dt);
+            Px[6] = Px[6] + ((Pxdot[6] + (state[9] - Px[9])) * dt);
+            Px[7] = Px[7] + ((Pxdot[7] + (state[10] - Px[10])) * dt);
+            Px[8] = Px[8] + ((Pxdot[8] + (state[11] - Px[11])) * dt);
+            Px[9] = Px[9] + ((Pxdot[9] + 2.0 * (state[9] - Px[9])) * dt);
+            Px[10] = Px[10] + ((Pxdot[10] + 2.0 * (state[10] - Px[10])) * dt);
+            Px[11] = Px[11] + ((Pxdot[11] + 2.0 * (state[11] - Px[11])) * dt);
+
+
+            for (int i = 0; i < 12; i++) {
+              if (Px[i] != Px[i] ) { // check for nan
+                  Pxdot[i] = old_Pxdot[i];
+                  Px[i] = old_Px[i];
+              }
+            }
+
+            std::cout << "Pxdot: ";
+            for (int i = 0; i < 12; i++) {
+              std::cout << Pxdot[i] << ", ";
+            }
+            std::cout << std::endl;
+            std::cout << "Px: ";
+            for (int i = 0; i < 12; i++) {
+              std::cout << Px[i] << ", ";
+            }
+            std::cout << std::endl;
+            std::cout << "State: ";
+            for (int i = 0; i < 12; i++) {
+              std::cout << state[i] << ", ";
+            }
+            std::cout << std::endl;
+
+
+
+
+            //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
+            memmove( old_state, state, sizeof(state) ); // old state update
+            memmove( old_Px, Px, sizeof(Px) );  // old_Px update
+            memmove( old_Pxdot, Pxdot, sizeof(Pxdot) ); // old_Pxdot update
+
+            firstrun = 2; // first time run variable, now velocities can be set correctly
+
+
+            //for (auto i = state.begin(); i != state.end(); ++i)
+            //  std::cout << *i << ' ';
+            //std::cout << std::endl;
+
+            //state.erase(state.begin(), state.end());
+
+            // Here to call the rpy method to recieve rpy: rp done, y missing
+            // next to call xyz method: xyz missing, needs to look into ansi c code from Kjeld
+
+            // With rpy and xyz, call model based fail detection algorithm with rpy as arguments.
+          }
         }
       }
     }
-  }
-  close(fd);                                                       /* Close the serial port */
-  return 0;
+    close(fd);                                                       /* Close the serial port */
+    return 0;
 }
