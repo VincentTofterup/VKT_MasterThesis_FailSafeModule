@@ -23,6 +23,7 @@ float wrap(float x_h, float y_h){
   if(x_h < 0) angle = M_PI-atan(y_h/x_h);
   if(x_h > 0 && y_h < 0) angle = -atan(y_h/x_h);
   if(x_h > 0 && y_h > 0) angle = 2*M_PI -atan(y_h/x_h);
+
   //In case of small values for x_h (no devision by 0) set the angle
   if(abs(x_h) < microT_tol && y_h < 0) angle = 0.5*M_PI;
   if(abs(x_h) < microT_tol && y_h > 0) angle = 1.5*M_PI;
@@ -96,7 +97,7 @@ int main(){
   float pitch = 0.0;
   float roll = 0.0;
   float yaw = 0.0;
-  float hdm = 0.0;
+
   //roll and pitch are needed in radians for compass tilt compensation
   float pitchRad, rollRad;
   float RadToDeg = (180.0/M_PI);
@@ -105,7 +106,6 @@ int main(){
 
   float roll_offset = 2.5;
   float pitch_offset = 0.2;
-
 
   // thau observer varibles:
 
@@ -125,37 +125,8 @@ int main(){
     old_Px[i] = 0.0;
 
   }
-  std::cout << "Initial Pxdot: ";
-  for (int i = 0; i < 12; i++) {
-    std::cout << Pxdot[i] << ", ";
-  }
-  std::cout << std::endl;
-  std::cout << "Initial Px: ";
-  for (int i = 0; i < 12; i++) {
-    std::cout << Px[i] << ", ";
-  }
-  std::cout << std::endl;
 
   int firstrun = 1;
-
-  float A[12][12];
-  float C[9][12];
-
-  for(int x=0;x<9;x++){ // rows
-    for(int y=0;y<12;y++){ // columns
-      C[x][y]=0.0;
-    }
-  }
-  //[row][column]
-  C[0][0] = 1.0; C[1][1] = 1.0; C[2][2] = 1.0; C[3][3] = 1.0;  C[4][4] = 1.0; C[5][5] = 1.0; C[6][9] = 1.0; C[7][10] = 1.0; C[8][11] = 1.0;
-
-  for(int x=0;x<12;x++){ // rows
-    for(int y=0;y<12;y++){ // columns
-      A[x][y]=0.0;
-    }
-  }
-  //[row][column]
-  A[0][3] = 1.0; A[1][4] = 1.0; A[2][5] = 1.0; A[9][6] = 1.0; A[10][7] = 1.0; A[11][8] = 1.0;
 
 
   std::cout << "Entering While Loop" << std::endl;
@@ -258,8 +229,8 @@ int main(){
             yawMag = wrap(cx_h, cy_h);
             //yawMag = wrap(cx,cy);  //without tilt compensation
 
-            yawMag = yawMag * RadToDeg;
-            //yawMag = (yawMag + declinationAngle); //* RadToDeg; // Subtracking the 'Declination Angle' in Deg --> a positive (to east) declination angle has to be subtracked
+            //yawMag = yawMag * RadToDeg;
+            yawMag = (yawMag - declinationAngle); //* RadToDeg; // Subtracking the 'Declination Angle' in Deg --> a positive (to east) declination angle has to be subtracked
 
             //Sensor fusion
             now = std::time(nullptr);
@@ -280,25 +251,16 @@ int main(){
 
             float degTorad = (2 * M_PI) / 360;
 
-
-
-            /*std::cout << "roll: " << roll - roll_offset<< std::endl;
-            std::cout << "pitch: " << pitch - pitch_offset<< std::endl;
-            std::cout << "yaw: " << yaw  << std::endl;
-            std::cout << std::endl;*/
-
-
             // Thau Observer
 
-            pos[0] = 587310.88; pos[1] = 6139948.83; pos[2] = 50.0; // Position in Odense C, lon: 55.398020 lat: 10.378631 converted to UTM with zone 32U
-            old_pos[0] = 587310.88; old_pos[1] = 6139948.83; old_pos[2] = 50.0;
+            pos[0] = 110.0; pos[1] = 110.0; pos[2] = 10.0; // Position in Odense C, lon: 55.398020 lat: 10.378631 converted to UTM with zone 32U
+            old_pos[0] = 110.0; old_pos[1] =110.0; old_pos[2] = 10.0;
 
             start = std::time(nullptr);
             float dt = (start - end)/10000.0;
             end = std::time(nullptr);
-            dt = 1.0;
-            //std::cout.precision(17);
-            //std::cout << "dt: " << dt << std::endl;
+            dt = 0.10;
+
 
             if (firstrun == 1) { // first run
               state[0] = (roll-roll_offset) * degTorad;
@@ -339,10 +301,10 @@ int main(){
             float Iy = 5e-3;  // Kgm^2
             float Iz = 10e-3; // Kgm^2
 
-            float omega1 = 100.0;
-            float omega2 = 100.0;
-            float omega3 = 100.0;
-            float omega4 = 100.0;
+            float omega1 = m * g;
+            float omega2 = m * g;
+            float omega3 = m * g;
+            float omega4 = m * g;
 
             // force and torque
             float ft = k*(pow(omega1,2)+pow(omega2,2)+pow(omega3,2)+pow(omega4,2)); // T_B
@@ -351,7 +313,7 @@ int main(){
             float tauz = b*(pow(omega2,2)+pow(omega4,2)-pow(omega1,2)-pow(omega3,2));
 
 
-            // State Estimate, from matlab:
+            // State Estimate change, from matlab:
             Pxdot[0] = (Px[3] + Px[5] * Px[1] + Px[4] * Px[0] * Px[1]); // Px(4)+Px(6)*Px(2)+Px(5)*Px(1)*Px(2)
             Pxdot[1] = (Px[4] - Px[5] * Px[0]); // Px(5)-Px(6)*Px(1)
             Pxdot[2] = (Px[5] + Px[4] * Px[0]); // Px(6)+Px(5)*Px(1)
@@ -363,14 +325,13 @@ int main(){
             Pxdot[8] = (Px[4] * Px[6] - Px[3] * Px[7] + (g * (ft/m)));  // Px(5)*Px(7)-Px(4)*Px(8)+g*(ftP/m)
             Pxdot[9] = (Px[8] * (Px[0] * Px[2] + Px[1]) - Px[7] * (Px[2] - Px[0] * Px[1]) + Px[6]); // Px(9)*(Px(1)*Px(3)+Px(2))-Px(8)*(Px(3)-Px(1)*Px(2))+Px(7)
             Pxdot[10] = (Px[7] * (1 + Px[0] * Px[1] * Px[2]) - Px[8] * (Px[0] - Px[1] * Px[2]) + Px[6] * Px[2]);  // Px(8)*(1+Px(1)*Px(2)*Px(3))-Px(9)*(Px(1)-Px(2)*Px(3))+Px(7)*Px(3)
-            Pxdot[11] = (Px[8] - Px[6] * Px[1] + Px[7] * Px[0]); // Px(9)-Px(7)*Px(2)+Px(8)*Px(1)
+            Pxdot[11] = (Px[8] - Px[6] * Px[1] + Px[7] * Px[0]); // Px(9)-Px(7)*Px(1)+Px(8)*Px(1)
 
 
             // Matlab functions for the following:
             //PThau = lyap((A+0.5*eye(12))',-C'*C);
             //PThau = inv(PThau)*C';
-            // Just copy pasted from matlab solution:
-            // Turns out, that these is not really needed, Px is just written out for each element equation
+            // Just copy pasted from matlab solution and writting into the following equations:
 
             // State estimate update, first Pxdot, then Px.
             // Pxdot = Pxdot + PThau*(C*x-C*Px);
@@ -397,11 +358,7 @@ int main(){
               }
             }
 
-            std::cout << "Pxdot: ";
-            for (int i = 0; i < 12; i++) {
-              std::cout << Pxdot[i] << ", ";
-            }
-            std::cout << std::endl;
+            
             std::cout << "Px: ";
             for (int i = 0; i < 12; i++) {
               std::cout << Px[i] << ", ";
@@ -414,21 +371,12 @@ int main(){
             std::cout << std::endl;
 
 
-
-
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
             memmove( old_state, state, sizeof(state) ); // old state update
             memmove( old_Px, Px, sizeof(Px) );  // old_Px update
             memmove( old_Pxdot, Pxdot, sizeof(Pxdot) ); // old_Pxdot update
 
             firstrun = 2; // first time run variable, now velocities can be set correctly
-
-
-            //for (auto i = state.begin(); i != state.end(); ++i)
-            //  std::cout << *i << ' ';
-            //std::cout << std::endl;
-
-            //state.erase(state.begin(), state.end());
 
             // Here to call the rpy method to recieve rpy: rp done, y missing
             // next to call xyz method: xyz missing, needs to look into ansi c code from Kjeld
