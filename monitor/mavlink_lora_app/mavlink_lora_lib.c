@@ -81,9 +81,10 @@ short i;
 char debug = 0;
 unsigned char txbuf[TX_BUF_SIZE];
 unsigned char rxbuf[RX_BUF_SIZE];
-unsigned char rxbuf_filtered[RX_BUF_SIZE]; // added array, not in original version
+unsigned char rxbuf_filtered[RX_BUF_SIZE]; /*added array, not in original version*/
 unsigned char tx_seq;
 short rxbuf_cnt;
+short rxbuf_filtered_cnt;	/*added variable not in original version*/
 short txbuf_cnt;
 
 short msg_begin, msg_next;
