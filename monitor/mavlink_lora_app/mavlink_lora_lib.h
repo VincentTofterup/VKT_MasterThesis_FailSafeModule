@@ -1,7 +1,7 @@
 /***************************************************************************
 # MavLink LoRa library
 # MavLink long range communication library 
-# Copyright (c) 2017, Kjeld Jensen <kjen@mmmi.sdu.dk> <kj@kjen.dk>
+# Copyright (c) 2017-2018, Kjeld Jensen <kjen@mmmi.sdu.dk> <kj@kjen.dk>
 # SDU UAS Center, http://sdu.dk/uas 
 # All rights reserved.
 #
@@ -34,6 +34,8 @@
 Revision
 2017-11-27 KJ First released test version
 2018-03-18 KJ Added unpacking of global_position_int and mission_current
+2018-04-04 KJ Added unpacking of statustext
+2018-04-10 KJ 2018-04-10 KJ Significant rewrites in order to make it Arduino compatible
 ****************************************************************************/
 
 #ifndef KJMAVLINK_H
@@ -42,20 +44,27 @@ Revision
 /***************************************************************************/
 /* parameters */
 
-#define MSG_ID_MIN_INTERVAL 3000 /* [ms] min interval between msgs of same id */
-#define MSG_SEQ_MIN_INTERVAL 0 /* [ms] min interval between msgs of any id */
+#define PARAM_TOUT 15000 /* [ms] timeout for other msgs when exchanging parameters */
+#define MISSION_TOUT 10000 /* [ms] timeout for other msgs when exchanging mission */
 
 /* #define DROP_MSGS_WITH_ID {30, 32, 35, 36, 62, 109} */ /* AutoQuad long range default */
 
-#define DROP_MSGS_WITH_ID {2, 24, 27, 29, 30, 31, 32, 35, 36, 62, 65, 74, 105, 116, 125, 129, 133, 136, 137, 147, 230, 231, 241, 245} /* PX4 long range default */
+#define DROP_MSGS_WITH_ID {27, 29, 35, 36, 62, 65, 74, 116, 129, 137, 178, 182, 241} /* PX4 long range default */
 
+#define SLOW_DOWN_MSGS_WITH_ID {0, 1, 2, 24, 30, 33, 42, 125, 152, 163, 165, 193}
+#define SLOW_DOWN_TIMEOUTS {1000, 3000, 3000, 2000, 2000, 1000, 1000, 5000, 3000, 2000, 5000, 3000}
+
+/***************************************************************************/
+/* inludes */
+
+#include <stdint.h>
 
 /***************************************************************************/
 /* defines */
 
 /* serial stream buffers */
-#define RX_BUF_SIZE	750
-#define TX_BUF_SIZE	250
+#define RX_BUF_SIZE	250
+#define TX_BUF_SIZE	150
 
 /* mavlink message content */
 #define ML_NEW_PACKET_IDENT_V10	0xfe /* MavLink v1.0 */
@@ -120,20 +129,13 @@ Revision
 #define MAVLINK_MSG_ID_MISSION_ACK 47
 #define MAVLINK_MSG_ID_MISSION_ACK_LEN 3
 
+#define MAVLINK_MSG_ID_STATUSTEXT 253
+#define MAVLINK_MSG_ID_STATUSTEXT_LEN 51
+
 typedef struct battery_status_t {
 	unsigned short voltage; /* [mV] */
 	char battery_remaining; /* [0;100] [%], -1 means invalid data */
 } battery_status_t;
-
-#include <stdint.h>
-
-/* typedef char int8_t; */
-typedef unsigned char uint8_t;
-typedef short int16_t;
-typedef unsigned short uint16_t;
-typedef int int32_t;
-typedef unsigned int uint32_t;
-/* typedef unsigned long long int uint64_t; */
 
 typedef struct __mavlink_gps_raw_int_t {
  uint64_t time_usec; /*< Timestamp (microseconds since UNIX epoch or microseconds since system boot)*/
@@ -147,7 +149,6 @@ typedef struct __mavlink_gps_raw_int_t {
  uint8_t fix_type; /*< See the GPS_FIX_TYPE enum.*/
  uint8_t satellites_visible; /*< Number of satellites visible. If unknown, set to 255*/
 } mavlink_gps_raw_int_t;
-
 
 typedef struct __mavlink_sys_status_t {
  uint32_t onboard_control_sensors_present; /*< Bitmask showing which onboard controllers and sensors are present. Value of 0: not present. Value of 1: present. Indices defined by ENUM MAV_SYS_STATUS_SENSOR*/
@@ -194,6 +195,11 @@ typedef struct __mavlink_mission_item_t { /* mavlink/common/mavlink_msg_mission_
  uint8_t autocontinue; /*< autocontinue to next wp*/
 } mavlink_mission_item_t;
 
+typedef struct __mavlink_statustext_t {
+ uint8_t severity; /*< Severity of status. Relies on the definitions within RFC-5424. See enum MAV_SEVERITY.*/
+ char text[50]; /*< Status text message, without null termination character*/
+} mavlink_statustext_t;
+
 /***************************************************************************/
 /* global variables */
 
@@ -214,6 +220,7 @@ mavlink_gps_raw_int_t ml_unpack_msg_gps_raw_int (unsigned char *payload);
 mavlink_global_position_int_t ml_unpack_msg_global_position_int (unsigned char *payload);
 unsigned short ml_unpack_msg_mission_count (unsigned char *payload);
 mavlink_mission_item_t ml_unpack_msg_mission_item (unsigned char *payload);
+mavlink_statustext_t ml_unpack_msg_statustext (unsigned char *payload);
 short ml_queue_msg_param_request_read (char *param_id);
 void ml_queue_msg_param_request_list (void);
 short ml_queue_msg_param_set (char *param_id, float param_value);
