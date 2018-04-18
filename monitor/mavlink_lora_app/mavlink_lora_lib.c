@@ -1,8 +1,8 @@
 /***************************************************************************
 # MavLink LoRa library
-# MavLink long range communication library 
+# MavLink long range communication library
 # Copyright (c) 2017-2018, Kjeld Jensen <kjen@mmmi.sdu.dk> <kj@kjen.dk>
-# SDU UAS Center, http://sdu.dk/uas 
+# SDU UAS Center, http://sdu.dk/uas
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -81,6 +81,7 @@ short i;
 char debug = 0;
 unsigned char txbuf[TX_BUF_SIZE];
 unsigned char rxbuf[RX_BUF_SIZE];
+unsigned char rxbuf_filtered[RX_BUF_SIZE]; // added array, not in original version
 unsigned char tx_seq;
 short rxbuf_cnt;
 short txbuf_cnt;
@@ -94,7 +95,7 @@ unsigned char drop_certain_msgs;
 static unsigned char recorded_sysid;
 
 unsigned char do_send_msg;
-unsigned long slow_tout[12]; 
+unsigned long slow_tout[12];
 unsigned long param_mission_tout;
 
 /***************************************************************************/
@@ -127,7 +128,7 @@ battery_status_t ml_unpack_msg_battery_status (unsigned char *payload)
 mavlink_gps_raw_int_t ml_unpack_msg_gps_raw_int (unsigned char *payload)
 {
 	/* mavlink/common/mavlink_gps_raw_int.h */
-	mavlink_gps_raw_int_t gri; 
+	mavlink_gps_raw_int_t gri;
 	uint64_t *ui64p;
 	int32_t *i32p;
 	uint8_t *ui8p;
@@ -160,7 +161,7 @@ mavlink_gps_raw_int_t ml_unpack_msg_gps_raw_int (unsigned char *payload)
 mavlink_global_position_int_t ml_unpack_msg_global_position_int (unsigned char *payload)
 {
 	/* mavlink/common/mavlink_global_position_int.h */
-	mavlink_global_position_int_t gpi; 
+	mavlink_global_position_int_t gpi;
 	int32_t *i32p;
 	int16_t *i16p;
 	uint16_t *ui16p;
@@ -183,7 +184,7 @@ mavlink_global_position_int_t ml_unpack_msg_global_position_int (unsigned char *
 	gpi.vx = *i16p;
 	ui16p = (uint16_t *) (payload + 26);
 	gpi.hdg = *ui16p;
-	
+
 	return gpi;
 }
 /***************************************************************************/
@@ -245,7 +246,7 @@ mavlink_statustext_t ml_unpack_msg_statustext (unsigned char *payload)
 {
 	/* mavlink/common/mavlink_msg_statustext.h */
 	mavlink_statustext_t statustext;
-	
+
 	statustext.severity = payload[0];
 	memcpy (statustext.text, payload+1, 50);
 
@@ -291,7 +292,7 @@ short ml_queue_msg_param_request_read (char *param_id)
 	/* reference: mavlink/common/mavlink_msg_param_request_read.h */
 	unsigned char i, len;
 	unsigned char *buf = (txbuf + txbuf_cnt);
-	
+
 	/* encode part of the header */
 	buf[ML_POS_PAYLOAD_LEN] = MAVLINK_MSG_ID_PARAM_REQUEST_READ_LEN;
 	buf[ML_POS_MSG_ID] = MAVLINK_MSG_ID_PARAM_REQUEST_READ;
@@ -301,7 +302,7 @@ short ml_queue_msg_param_request_read (char *param_id)
 	buf[ML_POS_PAYLOAD + 1] = 0xff; /* param_index MSB */
 
 	/* target_system */
-	buf[ML_POS_PAYLOAD + 2] = MAV_SYS_ID_UA; 
+	buf[ML_POS_PAYLOAD + 2] = MAV_SYS_ID_UA;
 
 	/* target_component */
 	buf[ML_POS_PAYLOAD + 3] = 0;
@@ -322,13 +323,13 @@ void ml_queue_msg_param_request_list (void)
 	/* reference: mavlink/common/mavlink_msg_param_request_list.h */
 	unsigned char i, len;
 	unsigned char *buf = (txbuf + txbuf_cnt);
-	
+
 	/* encode part of the header */
 	buf[ML_POS_PAYLOAD_LEN] = MAVLINK_MSG_ID_PARAM_REQUEST_LIST_LEN;
 	buf[ML_POS_MSG_ID] = MAVLINK_MSG_ID_PARAM_REQUEST_LIST;
 
 	/* target_system */
-	buf[ML_POS_PAYLOAD + 0] = MAV_SYS_ID_UA; 
+	buf[ML_POS_PAYLOAD + 0] = MAV_SYS_ID_UA;
 
 	/* target_component */
 	buf[ML_POS_PAYLOAD + 1] = 0;
@@ -350,7 +351,7 @@ short ml_queue_msg_mission_request (unsigned short seq)
 	/* seq */
 	buf[ML_POS_PAYLOAD + 0] = seq & 0xff;
 	buf[ML_POS_PAYLOAD + 1] = (seq>>8) & 0xff;
-	
+
 	/* system_id (target) */
 	buf[ML_POS_PAYLOAD + 2] = MAV_SYS_ID_UA; /* UA is the target system */
 
@@ -370,7 +371,7 @@ short ml_queue_msg_mission_request_list (void)
 	/* encode part of the header */
 	buf[ML_POS_PAYLOAD_LEN] = MAVLINK_MSG_ID_MISSION_REQUEST_LIST_LEN;
 	buf[ML_POS_MSG_ID] = MAVLINK_MSG_ID_MISSION_REQUEST_LIST;
-	
+
 	/* system_id (target) */
 	buf[ML_POS_PAYLOAD + 0] = MAV_SYS_ID_UA; /* UA is the target system */
 
@@ -390,7 +391,7 @@ short ml_queue_msg_mission_ack (void)
 	/* encode part of the header */
 	buf[ML_POS_PAYLOAD_LEN] = MAVLINK_MSG_ID_MISSION_ACK_LEN;
 	buf[ML_POS_MSG_ID] = MAVLINK_MSG_ID_MISSION_ACK;
-	
+
 	/* system_id (target) */
 	buf[ML_POS_PAYLOAD + 0] = MAV_SYS_ID_UA; /* UA is the target system */
 
@@ -417,11 +418,11 @@ short ml_queue_msg_param_set (char *param_id, float param_value)
 
 	/* param_value */
 	pv = (unsigned char *) &param_value;
-	buf[ML_POS_PAYLOAD + 0] = pv[0]; 
-	buf[ML_POS_PAYLOAD + 1] = pv[1]; 
-	buf[ML_POS_PAYLOAD + 2] = pv[2]; 
-	buf[ML_POS_PAYLOAD + 3] = pv[3]; 
-	
+	buf[ML_POS_PAYLOAD + 0] = pv[0];
+	buf[ML_POS_PAYLOAD + 1] = pv[1];
+	buf[ML_POS_PAYLOAD + 2] = pv[2];
+	buf[ML_POS_PAYLOAD + 3] = pv[3];
+
 	/* system_id (target) */
 	buf[ML_POS_PAYLOAD + 4] = MAV_SYS_ID_UA; /* UA is the target system */
 
@@ -436,7 +437,7 @@ short ml_queue_msg_param_set (char *param_id, float param_value)
 		buf[ML_POS_PAYLOAD + 6 + i] = 0;
 
 	/* param_type */
-	buf[ML_POS_PAYLOAD + 22] = 9; 
+	buf[ML_POS_PAYLOAD + 22] = 9;
 
 	/* queue message */
 	ml_queue_msg(buf);
@@ -466,7 +467,7 @@ short ml_rx_update(unsigned long now, unsigned char *rxbuf_new, short rxbuf_new_
 		/* add new bytes to buffer */
 	  	for (i=0; i<rxbuf_new_cnt; i++)
 	  		rxbuf[rxbuf_cnt++] = rxbuf_new[i];
-	  	
+
 		while (maybe_more == 1)
 		{
 			maybe_more = 0;
@@ -480,17 +481,17 @@ short ml_rx_update(unsigned long now, unsigned char *rxbuf_new, short rxbuf_new_
 			}
 
 			/* if we have found a packet start and the packet len > minimum */
-			if (msg_begin >= 0 && rxbuf_cnt >= msg_begin + 8) 
+			if (msg_begin >= 0 && rxbuf_cnt >= msg_begin + 8)
 			{
 				short payload_len = rxbuf[msg_begin + ML_POS_PAYLOAD_LEN];
 				short msg_next = msg_begin + payload_len + 8; /* actually beginning of next */
-		
+
 				/* if we have a complete packet */
 				if (rxbuf_cnt >= msg_next)
-				{			
-					unsigned char crc_ok;					
+				{
+					unsigned char crc_ok;
 					unsigned char msg_id = rxbuf[msg_begin + ML_POS_MSG_ID];
-					
+
 					/* if the checksum is valid */
 					unsigned char crc_lsb = rxbuf[msg_begin + payload_len + 6];
 					unsigned char crc_msb = rxbuf[msg_begin + payload_len + 7];
@@ -504,7 +505,7 @@ short ml_rx_update(unsigned long now, unsigned char *rxbuf_new, short rxbuf_new_
 						msg_cnt++;
 						do_send_msg = 1;
 
-						/* if first time record the sys_id */	
+						/* if first time record the sys_id */
 						if (msg_id == 0 && recorded_sysid == 0)
 							recorded_sysid = rxbuf[msg_begin + ML_POS_SYS_ID];
 
@@ -512,13 +513,13 @@ short ml_rx_update(unsigned long now, unsigned char *rxbuf_new, short rxbuf_new_
 						/* if (drop_certain_msgs != 0) */
 						if (1)
 						{
-							for (i=0; i<sizeof(DROP_MSGS); i++)	
+							for (i=0; i<sizeof(DROP_MSGS); i++)
 							{
 								if (msg_id == DROP_MSGS[i])
 									do_send_msg = 0;
 							}
 						}
-						
+
 						/* check if param or mission sequence is ongoing */
 						if (do_send_msg == 1)
 						{
@@ -540,7 +541,7 @@ short ml_rx_update(unsigned long now, unsigned char *rxbuf_new, short rxbuf_new_
 						/* check if we should slow down this particular message id */
 						if (do_send_msg == 1)
 						{
-							for (i=0; i<sizeof(SLOW_MSGS); i++)	
+							for (i=0; i<sizeof(SLOW_MSGS); i++)
 							{
 								if (msg_id == SLOW_MSGS[i])
 								{
@@ -554,12 +555,12 @@ short ml_rx_update(unsigned long now, unsigned char *rxbuf_new, short rxbuf_new_
 						    	}
 						  	}
 						  }
-						}	
+						}
 
 					  /* handle packet */
 					  if (do_send_msg == 1)
 						{
-							result ++;						
+							result ++;
 
 							ml_parse_msg (rxbuf + msg_begin);
 
@@ -581,7 +582,7 @@ short ml_rx_update(unsigned long now, unsigned char *rxbuf_new, short rxbuf_new_
 
 						}
 					}
- 
+
 					/* remove packet from rxbuf */
 					for (i=msg_next, j=0; i<rxbuf_cnt; i++, j++)
 					{
@@ -589,9 +590,9 @@ short ml_rx_update(unsigned long now, unsigned char *rxbuf_new, short rxbuf_new_
 					}
 					rxbuf_cnt -= msg_next;
 					/* printf ("rxbuf_cnt_after %d\n", rxbuf_cnt); */
-					
+
 					msg_begin = -1;
-					seek_from = 0;				
+					seek_from = 0;
 					maybe_more = 1;
 					/* printf ("repeat\n");  */
 				}
@@ -601,4 +602,3 @@ short ml_rx_update(unsigned long now, unsigned char *rxbuf_new, short rxbuf_new_
 	return result;
 }
 /***************************************************************************/
-
