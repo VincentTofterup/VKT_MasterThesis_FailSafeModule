@@ -253,7 +253,7 @@ int main(){
 
             std::cout << "Roll: " << roll << std::endl;
             std::cout << "Pitch: " << pitch << std::endl;
-            
+
 
             // Thau Observer
 
@@ -363,12 +363,12 @@ int main(){
             }
 
 
-            std::cout << "Px: ";
+            //std::cout << "Px: ";
             for (int i = 0; i < 12; i++) {
               //std::cout << Px[i] << ", ";
             }
-            std::cout << std::endl;
-            std::cout << "State: ";
+            //std::cout << std::endl;
+            //std::cout << "State: ";
             for (int i = 0; i < 12; i++) {
               //std::cout << state[i] << ", ";
             }
