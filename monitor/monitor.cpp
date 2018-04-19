@@ -104,8 +104,8 @@ int main(){
   // Declination Angle, can be found on  http://www.magnetic-declination.com/
   float declinationAngle = 2.59;
 
-  float roll_offset = 2.5;
-  float pitch_offset = 0.2;
+  float roll_offset = 4.0;
+  float pitch_offset = 0.5;
 
   // thau observer varibles:
 
@@ -251,8 +251,8 @@ int main(){
 
             float degTorad = (2 * M_PI) / 360;
 
-            std::cout << "Roll: " << roll << std::endl;
-            std::cout << "Pitch: " << pitch << std::endl;
+            std::cout << "Roll: " << roll-roll_offset << std::endl;
+            std::cout << "Pitch: " << pitch-pitch_offset << std::endl;
 
 
             // Thau Observer
