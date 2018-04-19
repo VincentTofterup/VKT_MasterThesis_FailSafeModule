@@ -251,6 +251,10 @@ int main(){
 
             float degTorad = (2 * M_PI) / 360;
 
+            std::cout << "Roll: " << roll << std::endl;
+            std::cout << "Pitch: " << pitch << std::endl;
+            
+
             // Thau Observer
 
             pos[0] = 110.0; pos[1] = 110.0; pos[2] = 10.0; // Position in Odense C, lon: 55.398020 lat: 10.378631 converted to UTM with zone 32U
@@ -358,15 +362,15 @@ int main(){
               }
             }
 
-            
+
             std::cout << "Px: ";
             for (int i = 0; i < 12; i++) {
-              std::cout << Px[i] << ", ";
+              //std::cout << Px[i] << ", ";
             }
             std::cout << std::endl;
             std::cout << "State: ";
             for (int i = 0; i < 12; i++) {
-              std::cout << state[i] << ", ";
+              //std::cout << state[i] << ", ";
             }
             std::cout << std::endl;
 
