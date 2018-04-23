@@ -499,6 +499,7 @@ int main(){
           	ser_err = ser_open (&ser, &oldtio, ser_dev, CFG_SER_BAUD);
             /* if everything ok */
           	if (! ser_err){
+              printf("Opend serial device!");
           		ml_init();
               pos_init();
           		ml_set_monitor_all();
