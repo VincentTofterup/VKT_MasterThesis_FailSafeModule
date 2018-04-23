@@ -25,6 +25,8 @@
 
 #include "mavlink_lora_lib.h"
 
+#include "LatLong-UTMconversion.h"
+
 static sigset_t wait_mask;
 
 
@@ -98,6 +100,7 @@ char s[80];
 double battery = 0.0;
 double pos_raw[3];
 double pos_glo[3];
+bool heartbeat = false;
 
 /***************************************************************************/
 void pos_init(void){
@@ -107,6 +110,8 @@ void pos_init(void){
 /***************************************************************************/
 void pos_parse_msg(unsigned char *msg, unsigned long now){
 	switch (msg[ML_POS_MSG_ID]){
+    case 0:
+      heartbeat = true;
     case 1:
       {
         mavlink_sys_status_t sys_status = ml_unpack_msg_sys_status (msg + ML_POS_PAYLOAD);
@@ -526,12 +531,24 @@ int main(){
 
             //sigsuspend(&wait_mask);
 
+            // pos format: 55.5304, 9.77391, 7.713
+
+            pos_glo[0] = 55.5304;
+            pos_glo[1] = 9.77391;
+            pos_glo[2] = 7.713;
+
             //std::cout << "Battery voltage: " << battery << std::endl;
             std::cout << "pos_raw[lat,lon,alt]: " << pos_raw[0] << ", " << pos_raw[1] << ", " << pos_raw[2] << std::endl;
-            std::cout << "pos_glo[lat,lon,alt]: " << pos_glo[0] << ", " << pos_glo[1] << ", " << pos_glo[2] << std::endl;
+            //std::cout << "pos_glo[lat,lon,alt]: " << pos_glo[0] << ", " << pos_glo[1] << ", " << pos_glo[2] << std::endl;
+
+            double northing, easting;
+            int zone = 32;
+            int ellip = 22; // WGS84
 
 
+            LLtoUTM(ellip, pos_glo[0], pos_glo[1], northing, easting, zone);
 
+            std::cout << "UTM: " << northing << ", " << easting << std::endl;
 
 
 
@@ -546,6 +563,9 @@ int main(){
             // next to call xyz method: xyz missing, needs to look into ansi c code from Kjeld
 
             // With rpy and xyz, call model based fail detection algorithm with rpy as arguments.
+
+            // reset heartbeat bool for check
+            heartbeat = false;
           }
         }
       }
