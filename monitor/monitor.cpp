@@ -118,9 +118,9 @@ void pos_parse_msg(unsigned char *msg, unsigned long now){
 			{
 				mavlink_gps_raw_int_t gri = ml_unpack_msg_gps_raw_int (msg + ML_POS_PAYLOAD);
 			  sprintf (s, "%.3f,%.7f,%.7f,%.3f\n", (double) gri.time_usec/1000000, (double) gri.lat/10000000, (double) gri.lon/10000000, (double) gri.alt/1000);
-        pos[0] =  gri.lat/10000000;
-        pos[1] =  gri.lon/10000000;
-        pos[2] = gri.alt/1000;
+        pos[0] =  (double) gri.lat/10000000;
+        pos[1] =  (double) gri.lon/10000000;
+        pos[2] =  (double) gri.alt/1000;
 
 				//printf ("GPS_RAW_INT ");
 				//printf ("%s", s);
