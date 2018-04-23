@@ -140,9 +140,6 @@ void pos_parse_msg(unsigned char *msg, unsigned long now){
 	}
 }
 
-void pos_update(void)
-{
-}
 /***************************************************************************/
 void ml_parse_msg(unsigned char *msg){
   pos_parse_msg(msg, millis());
@@ -518,7 +515,7 @@ int main(){
           		result = ml_rx_update(now, serbuf, serbuf_cnt);
           	}
 
-            //sigsuspend(&wait_mask);
+            sigsuspend(&wait_mask);
 
 
 
