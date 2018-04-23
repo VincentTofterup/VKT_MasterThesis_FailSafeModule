@@ -13,7 +13,18 @@
 #include <ctime>
 #include <chrono>
 #include <unistd.h>
-//#include "mavlink_pos.c"
+#include <sys/time.h> // gettimeofday system call
+#include <serial.h>
+
+#include <time.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/signal.h>
+#include <sys/types.h>
+#include <stdio.h>
+
+#include "mavlink_lora_lib.h"
+
 
 // Function for correction of yaw angle (replaces the atan2 function for more controll)
 float wrap(float x_h, float y_h){
@@ -29,6 +40,91 @@ float wrap(float x_h, float y_h){
   if(abs(x_h) < microT_tol && y_h > 0) angle = 1.5*M_PI;
   return angle;
 }
+
+#define true					1
+#define false					0
+
+#define SCHED_INTERVAL  		2e4 /**< schedule interval set to 50 Hz */
+
+#define APP_INIT_OK				0
+#define APP_INIT_ERR			1
+
+#define CFG_SER_DEV				"/dev/serial0"
+#define CFG_SER_BAUD			115200
+
+
+#define SER_BUF_SIZE 1000
+unsigned long millis(void);
+
+/***************************************************************************/
+/* variables */
+
+static char quit = 0;
+static int ser = 0;
+static struct termios oldtio;
+static unsigned char serbuf[SER_BUF_SIZE];
+static short serbuf_cnt;
+static unsigned char cmd;
+
+/* implementation of the arduino style millis() to return current number of
+   milliseconds since application launch */
+static unsigned long secs_init = 0;
+
+unsigned long millis(void)
+{
+    struct timeval te;
+    gettimeofday(&te, NULL); /* get current time */
+
+	if (secs_init == 0)
+	{
+		secs_init = te.tv_sec;
+	}
+
+	return ((unsigned long) (te.tv_sec - secs_init)*1000 + te.tv_usec/1000);
+}
+
+
+/* static variables */
+FILE *f;
+char s[80];
+/***************************************************************************/
+void pos_init(void){
+	f = fopen("position.log", "a");
+	fprintf (f, "#time_boot,lat,lon,alt,relative_alt,vx,vy,vz,heading\n");
+}
+/***************************************************************************/
+void pos_parse_msg(unsigned char *msg, unsigned long now){
+	switch (msg[ML_POS_MSG_ID]){
+		case 24:
+			{
+				mavlink_gps_raw_int_t gri = ml_unpack_msg_gps_raw_int (msg + ML_POS_PAYLOAD);
+				sprintf (s, "%.3f,%.7f,%.7f,%.3f\n", (double) gri.time_usec/1000000, (double) gri.lat/10000000, (double) gri.lon/10000000, (double) gri.alt/1000);
+
+				printf ("GPS_RAW_INT ");
+				printf ("%s", s);
+				fprintf (f, "GPS_RAW_INT,%s", s);
+			}
+			break;
+
+		case 33:
+			{
+				mavlink_global_position_int_t gpi = ml_unpack_msg_global_position_int (msg + ML_POS_PAYLOAD);
+				sprintf (s, "%.3f,%.7f,%.7f,%.3f,%.3f,%.2f,%.2f,%.2f,%.2f\n", (double) gpi.time_boot_ms/1000, (double) gpi.lat/10000000, (double) gpi.lon/10000000, (double) gpi.alt/1000, (double) gpi.relative_alt/1000, (double) gpi.vx/100, (double) gpi.vy/100, (double) gpi.vz/100, (double) gpi.hdg/100);
+
+				printf ("GLOBAL_POSITION_INT ");
+				printf ("%s", s);
+				fprintf (f, "GLOBAL_POSITION_INT,%s", s);
+			}
+			break;
+	}
+}
+
+/***************************************************************************/
+void ml_parse_msg(unsigned char *msg){
+  pos_parse_msg(msg, millis());
+}
+/***************************************************************************/
+
 
 
 int main(){
@@ -372,7 +468,42 @@ int main(){
             for (int i = 0; i < 12; i++) {
               //std::cout << state[i] << ", ";
             }
-            std::cout << std::endl;
+
+            char ser_dev[50];
+          	int ser_err;
+          	char param_id[17];
+          	unsigned char ser_dev_set;
+
+
+            strcpy (ser_dev, CFG_SER_DEV); /* default serial device */
+            if (ser_dev_set == 0)
+          		printf ("Serial device (default): %s\n\n", ser_dev);
+          	else
+          		printf ("Serial device: %s\n\n", ser_dev);
+
+          	/* try to open the serial device */
+          	ser_err = ser_open (&ser, &oldtio, ser_dev, CFG_SER_BAUD);
+            /* if everything ok */
+          	if (! ser_err){
+          		ml_init();
+              pos_init();
+          		ml_set_monitor_all();
+          	}else{
+          		printf ("Unable to open serial device\n");
+          	}
+
+            char result;
+          	unsigned long now = millis();
+          	serbuf_cnt = SER_BUF_SIZE;
+          	serbuf_cnt = ser_receive (ser, serbuf, serbuf_cnt);
+
+          	/* if we received new data */
+          	if (serbuf_cnt > 0){
+          		result = ml_rx_update(now, serbuf, serbuf_cnt);
+          	}
+
+
+
 
 
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update

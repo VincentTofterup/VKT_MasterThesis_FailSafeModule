@@ -3,7 +3,7 @@
 # All rights reserved.
 
 PROJECT=failsafe_module
-SOURCES=  monitor.cpp
+SOURCES=  monitor.cpp checksum.h mavlink_lora_lib.c serial.c
 CC = g++
 CFLAGS = -std=c++11
 
