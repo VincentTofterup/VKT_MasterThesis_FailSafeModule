@@ -83,6 +83,12 @@ unsigned long millis(void)
 	return ((unsigned long) (te.tv_sec - secs_init)*1000 + te.tv_usec/1000);
 }
 
+void ml_tx_update (void)
+{
+		ser_send (ser, txbuf, txbuf_cnt);
+		txbuf_cnt = 0;
+}
+
 
 /* static variables */
 FILE *f;
