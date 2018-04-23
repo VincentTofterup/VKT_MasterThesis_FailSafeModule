@@ -553,7 +553,7 @@ int main(){
             }
 
             Point poly2[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting-10.0}};
-            if (isInside(poly2, 3, tmp)) {
+            if (! isInside(poly2, 3, tmp)) {
               std::cout << "Current position outside defined polygon! (supposed to be outside at all times) " << std::endl;
             }
 
