@@ -547,10 +547,16 @@ int main(){
             std::cout << "UTM(norting,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
 
             Point tmp = {northing, easting};
-            Point poly[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
-            if (isInside(poly, 3, tmp)) {
-              std::cout << "Current position inside defined polygon!" << std::endl;
+            Point poly1[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
+            if (isInside(poly1, 3, tmp)) {
+              std::cout << "Current position inside defined polygon! (supposed to be inside at all times) " << std::endl;
             }
+
+            Point poly2[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting-10.0}};
+            if (isInside(poly3, 3, tmp)) {
+              std::cout << "Current position outside defined polygon! (supposed to be outside at all times) " << std::endl;
+            }
+
 
 
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
