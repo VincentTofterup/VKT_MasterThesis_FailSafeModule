@@ -491,7 +491,7 @@ int main(){
 
             strcpy (ser_dev, CFG_SER_DEV); /* default serial device */
             if (ser_dev_set == 0)
-          		printf ("Serial device (default): %s\n\n", ser_dev);
+          		//printf ("Serial device (default): %s\n\n", ser_dev);
           	else
           		printf ("Serial device: %s\n\n", ser_dev);
 
@@ -499,7 +499,7 @@ int main(){
           	ser_err = ser_open (&ser, &oldtio, ser_dev, CFG_SER_BAUD);
             /* if everything ok */
           	if (! ser_err){
-              printf("Opend serial device!\n");
+              //printf("Opend serial device!\n");
           		ml_init();
               pos_init();
           		ml_set_monitor_all();
