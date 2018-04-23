@@ -96,7 +96,8 @@ void ml_tx_update (void)
 FILE *f;
 char s[80];
 double battery = 0.0;
-double pos[3]; pos[0] = 0.0; pos[1] = 0.0; pos[2] = 0.0;
+double pos[3];
+
 /***************************************************************************/
 void pos_init(void){
 	f = fopen("position.log", "a");
@@ -226,7 +227,7 @@ int main(){
 
   // thau observer varibles:
 
-  double pos[3];
+  //double pos[3];
   double old_pos[3];
   double state[12];
   double old_state[12];
@@ -400,8 +401,8 @@ int main(){
 
             // Thau Observer
 
-            pos[0] = 110.0; pos[1] = 110.0; pos[2] = 10.0; // Position in Odense C, lon: 55.398020 lat: 10.378631 converted to UTM with zone 32U
-            old_pos[0] = 110.0; old_pos[1] =110.0; old_pos[2] = 10.0;
+            //pos[0] = 110.0; pos[1] = 110.0; pos[2] = 10.0; // Position in Odense C, lon: 55.398020 lat: 10.378631 converted to UTM with zone 32U
+            //old_pos[0] = 110.0; old_pos[1] =110.0; old_pos[2] = 10.0;
 
             start = std::time(nullptr);
             float dt = (start - end)/10000.0;
