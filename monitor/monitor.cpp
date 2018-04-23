@@ -105,14 +105,14 @@ void pos_parse_msg(unsigned char *msg, unsigned long now){
 	switch (msg[ML_POS_MSG_ID]){
     case 0:
       {
-        printf ("HEARTBEAT");
+        printf ("HEARTBEAT\n");
       }
       break;
 
     case 1:
       {
         mavlink_sys_status_t sys_status = ml_unpack_msg_sys_status (msg + ML_POS_PAYLOAD);
-				printf ("SYS_STATUS: Voltage %d mV", sys_status.voltage_battery);
+				printf ("SYS_STATUS: Voltage %d mV\n", sys_status.voltage_battery);
       }
       break;
 
@@ -507,7 +507,7 @@ int main(){
 
 
 
-      
+
 
             char result;
           	unsigned long now = millis();
@@ -516,7 +516,7 @@ int main(){
 
           	/* if we received new data */
           	if (serbuf_cnt > 0){
-              printf("New data received!\n");
+
           		result = ml_rx_update(now, serbuf, serbuf_cnt);
           	}
 
