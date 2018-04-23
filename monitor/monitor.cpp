@@ -518,6 +518,8 @@ int main(){
 
             //sigsuspend(&wait_mask);
 
+            std::cout << "Battery voltage: " << battery << std::endl;
+
 
 
 
