@@ -53,7 +53,7 @@ float wrap(float x_h, float y_h){
 #define APP_INIT_OK				0
 #define APP_INIT_ERR			1
 
-#define CFG_SER_DEV				"/dev/serial0"
+#define CFG_SER_DEV				"/dev/serial0" // default uart device for raspberry pi 3b
 #define CFG_SER_BAUD			115200
 
 
@@ -263,7 +263,7 @@ int main(){
 
   strcpy (ser_dev, CFG_SER_DEV); /* default serial device */
   if (ser_dev_set == 0)
-    printf ("Serial device (default): %s\n\n", ser_dev);
+    //printf ("Serial device (default): %s\n\n", ser_dev);
   else
     printf ("Serial device: %s\n\n", ser_dev);
 
