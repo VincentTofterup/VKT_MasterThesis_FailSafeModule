@@ -26,6 +26,7 @@
 #include "mavlink_lora_lib.h"
 
 #include "LatLong-UTMconversion.h"
+#include "polygon.h"
 
 static sigset_t wait_mask;
 
@@ -529,10 +530,6 @@ int main(){
           		result = ml_rx_update(now, serbuf, serbuf_cnt);
           	}
 
-            //sigsuspend(&wait_mask);
-
-            // pos format: 55.5304, 9.77391, 7.713
-
             //postions for test
             //pos_glo[0] = 55.5304;
             //pos_glo[1] = 9.77391;
@@ -540,7 +537,6 @@ int main(){
 
             //std::cout << "Battery voltage: " << battery << std::endl;
             std::cout << "pos_raw[lat,lon,alt]: " << pos_raw[0] << ", " << pos_raw[1] << ", " << pos_raw[2] << std::endl;
-            //std::cout << "pos_glo[lat,lon,alt]: " << pos_glo[0] << ", " << pos_glo[1] << ", " << pos_glo[2] << std::endl;
 
             double northing, easting;
             int zone = 32;
@@ -550,6 +546,11 @@ int main(){
 
             std::cout << "UTM(norting,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
 
+            Point tmp = {northing, easting};
+            Point poly[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
+            if (isInside(poly, 3, tmp)) {
+              std::cout << "Current position inside defined polygon!" << std::endl;
+            }
 
 
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
