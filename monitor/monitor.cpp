@@ -262,10 +262,10 @@ int main(){
   unsigned char ser_dev_set;
 
   strcpy (ser_dev, CFG_SER_DEV); /* default serial device */
-  if (ser_dev_set == 0)
+  //if (ser_dev_set == 0)
     //printf ("Serial device (default): %s\n\n", ser_dev);
-  else
-    printf ("Serial device: %s\n\n", ser_dev);
+  //else
+  //  printf ("Serial device: %s\n\n", ser_dev);
 
   /* try to open the serial device */
   ser_err = ser_open (&ser, &oldtio, ser_dev, CFG_SER_BAUD);
