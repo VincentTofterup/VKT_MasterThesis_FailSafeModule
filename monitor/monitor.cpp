@@ -533,9 +533,10 @@ int main(){
 
             // pos format: 55.5304, 9.77391, 7.713
 
-            pos_glo[0] = 55.5304;
-            pos_glo[1] = 9.77391;
-            pos_glo[2] = 7.713;
+            //postions for test
+            //pos_glo[0] = 55.5304;
+            //pos_glo[1] = 9.77391;
+            //pos_glo[2] = 7.713;
 
             //std::cout << "Battery voltage: " << battery << std::endl;
             std::cout << "pos_raw[lat,lon,alt]: " << pos_raw[0] << ", " << pos_raw[1] << ", " << pos_raw[2] << std::endl;
@@ -545,10 +546,9 @@ int main(){
             int zone = 32;
             int ellip = 22; // WGS84
 
+            LLtoUTM(ellip, pos_raw[0], pos_raw[1], northing, easting, zone);
 
-            LLtoUTM(ellip, pos_glo[0], pos_glo[1], northing, easting, zone);
-
-            std::cout << "UTM: " << northing << ", " << easting << std::endl;
+            std::cout << "UTM(norting,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
 
 
 
