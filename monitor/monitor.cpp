@@ -95,6 +95,7 @@ void ml_tx_update (void)
 /* static variables */
 FILE *f;
 char s[80];
+double battery = 0.0;
 /***************************************************************************/
 void pos_init(void){
 	f = fopen("position.log", "a");
@@ -103,27 +104,22 @@ void pos_init(void){
 /***************************************************************************/
 void pos_parse_msg(unsigned char *msg, unsigned long now){
 	switch (msg[ML_POS_MSG_ID]){
-    case 0:
-      {
-        printf ("HEARTBEAT\n");
-      }
-      break;
-
     case 1:
       {
         mavlink_sys_status_t sys_status = ml_unpack_msg_sys_status (msg + ML_POS_PAYLOAD);
-				printf ("SYS_STATUS: Voltage %d mV\n", sys_status.voltage_battery);
+        battery = sys_status.voltage_battery;
+
       }
       break;
 
 		case 24:
 			{
-				mavlink_gps_raw_int_t gri = ml_unpack_msg_gps_raw_int (msg + ML_POS_PAYLOAD);
+				/*mavlink_gps_raw_int_t gri = ml_unpack_msg_gps_raw_int (msg + ML_POS_PAYLOAD);
 				sprintf (s, "%.3f,%.7f,%.7f,%.3f\n", (double) gri.time_usec/1000000, (double) gri.lat/10000000, (double) gri.lon/10000000, (double) gri.alt/1000);
 
 				printf ("GPS_RAW_INT ");
 				printf ("%s", s);
-				fprintf (f, "GPS_RAW_INT,%s", s);
+				fprintf (f, "GPS_RAW_INT,%s", s);*/
 			}
 			break;
 
