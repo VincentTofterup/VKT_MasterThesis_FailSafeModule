@@ -119,6 +119,9 @@ void pos_parse_msg(unsigned char *msg, unsigned long now){
 	}
 }
 
+void pos_update(void)
+{
+}
 /***************************************************************************/
 void ml_parse_msg(unsigned char *msg){
   pos_parse_msg(msg, millis());
@@ -501,6 +504,7 @@ int main(){
           	if (serbuf_cnt > 0){
           		result = ml_rx_update(now, serbuf, serbuf_cnt);
           	}
+            pos_update();
 
 
 
