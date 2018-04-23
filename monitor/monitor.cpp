@@ -522,8 +522,8 @@ int main(){
 
             //sigsuspend(&wait_mask);
 
-            std::cout << "Battery voltage: " << battery << std::endl;
-            std::cout << "Pos[lat,lon,alt]: " << pos[0] << ", " << pos[1] << ", " << pos[2] << std::endl;
+            //std::cout << "Battery voltage: " << battery << std::endl;
+            //std::cout << "Pos[lat,lon,alt]: " << pos[0] << ", " << pos[1] << ", " << pos[2] << std::endl;
 
 
 
