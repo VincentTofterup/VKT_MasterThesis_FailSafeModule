@@ -96,7 +96,8 @@ void ml_tx_update (void)
 FILE *f;
 char s[80];
 double battery = 0.0;
-double pos[3];
+double pos_raw[3];
+double pos_glo[3];
 
 /***************************************************************************/
 void pos_init(void){
@@ -118,9 +119,9 @@ void pos_parse_msg(unsigned char *msg, unsigned long now){
 			{
 				mavlink_gps_raw_int_t gri = ml_unpack_msg_gps_raw_int (msg + ML_POS_PAYLOAD);
 			  sprintf (s, "%.3f,%.7f,%.7f,%.3f\n", (double) gri.time_usec/1000000, (double) gri.lat/10000000, (double) gri.lon/10000000, (double) gri.alt/1000);
-        pos[0] =  (double) gri.lat/10000000;
-        pos[1] =  (double) gri.lon/10000000;
-        pos[2] =  (double) gri.alt/1000;
+        pos_raw[0] =  (double) gri.lat/10000000;
+        pos_raw[1] =  (double) gri.lon/10000000;
+        pos_raw[2] =  (double) gri.alt/1000;
 
 				//printf ("GPS_RAW_INT ");
 				//printf ("%s", s);
@@ -131,11 +132,13 @@ void pos_parse_msg(unsigned char *msg, unsigned long now){
 		case 33:
 			{
 				mavlink_global_position_int_t gpi = ml_unpack_msg_global_position_int (msg + ML_POS_PAYLOAD);
-				sprintf (s, "%.3f,%.7f,%.7f,%.3f,%.3f,%.2f,%.2f,%.2f,%.2f\n", (double) gpi.time_boot_ms/1000, (double) gpi.lat/10000000, (double) gpi.lon/10000000, (double) gpi.alt/1000, (double) gpi.relative_alt/1000, (double) gpi.vx/100, (double) gpi.vy/100, (double) gpi.vz/100, (double) gpi.hdg/100);
-
-				printf ("GLOBAL_POSITION_INT ");
-				printf ("%s", s);
-				fprintf (f, "GLOBAL_POSITION_INT,%s", s);
+				//sprintf (s, "%.3f,%.7f,%.7f,%.3f,%.3f,%.2f,%.2f,%.2f,%.2f\n", (double) gpi.time_boot_ms/1000, (double) gpi.lat/10000000, (double) gpi.lon/10000000, (double) gpi.alt/1000, (double) gpi.relative_alt/1000, (double) gpi.vx/100, (double) gpi.vy/100, (double) gpi.vz/100, (double) gpi.hdg/100);
+        pos_glo[0] =  (double) gpi.lat/10000000;
+        pos_glo[1] =  (double) gpi.lon/10000000;
+        pos_glo[2] =  (double) gpi.alt/1000;
+				//printf ("GLOBAL_POSITION_INT ");
+				//printf ("%s", s);
+				//fprintf (f, "GLOBAL_POSITION_INT,%s", s);
 			}
 			break;
 	}
@@ -227,7 +230,7 @@ int main(){
 
   // thau observer varibles:
 
-  //double pos[3];
+  double pos[3];
   double old_pos[3];
   double state[12];
   double old_state[12];
@@ -524,7 +527,8 @@ int main(){
             //sigsuspend(&wait_mask);
 
             //std::cout << "Battery voltage: " << battery << std::endl;
-            std::cout << "Pos[lat,lon,alt]: " << pos[0] << ", " << pos[1] << ", " << pos[2] << std::endl;
+            std::cout << "pos_raw[lat,lon,alt]: " << pos_raw[0] << ", " << pos_raw[1] << ", " << pos_raw[2] << std::endl;
+            std::cout << "pos_glo[lat,lon,alt]: " << pos_glo[0] << ", " << pos_glo[1] << ", " << pos_glo[2] << std::endl;
 
 
 
