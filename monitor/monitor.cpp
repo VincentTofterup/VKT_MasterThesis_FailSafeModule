@@ -95,6 +95,19 @@ void pos_init(void){
 /***************************************************************************/
 void pos_parse_msg(unsigned char *msg, unsigned long now){
 	switch (msg[ML_POS_MSG_ID]){
+    case 0:
+      {
+        printf ("HEARTBEAT");
+      }
+      break;
+
+    case 1:
+      {
+        mavlink_sys_status_t sys_status = ml_unpack_msg_sys_status (msg + ML_POS_PAYLOAD);
+				printf ("SYS_STATUS: Voltage %d mV", sys_status.voltage_battery);
+      }
+      break;
+
 		case 24:
 			{
 				mavlink_gps_raw_int_t gri = ml_unpack_msg_gps_raw_int (msg + ML_POS_PAYLOAD);
@@ -350,8 +363,8 @@ int main(){
 
             float degTorad = (2 * M_PI) / 360;
 
-            std::cout << "Roll: " << roll-roll_offset << std::endl;
-            std::cout << "Pitch: " << pitch-pitch_offset << std::endl;
+            //std::cout << "Roll: " << roll-roll_offset << std::endl;
+            //std::cout << "Pitch: " << pitch-pitch_offset << std::endl;
 
 
             // Thau Observer
@@ -504,7 +517,7 @@ int main(){
           	if (serbuf_cnt > 0){
           		result = ml_rx_update(now, serbuf, serbuf_cnt);
           	}
-            pos_update();
+
 
 
 
