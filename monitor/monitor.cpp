@@ -245,6 +245,32 @@ int main(){
 
   int firstrun = 1;
 
+  // Mavlink init:
+
+  char ser_dev[50];
+  int ser_err;
+  char param_id[17];
+  unsigned char ser_dev_set;
+
+  strcpy (ser_dev, CFG_SER_DEV); /* default serial device */
+  if (ser_dev_set == 0)
+    printf ("Serial device (default): %s\n\n", ser_dev);
+  else
+    printf ("Serial device: %s\n\n", ser_dev);
+
+  /* try to open the serial device */
+  ser_err = ser_open (&ser, &oldtio, ser_dev, CFG_SER_BAUD);
+  /* if everything ok */
+  if (! ser_err){
+    //printf("Opend serial device!\n");
+    ml_init();
+    pos_init();
+    ml_set_monitor_all();
+  }else{
+    printf ("Unable to open serial device\n");
+  }
+
+
 
   std::cout << "Entering While Loop" << std::endl;
 
@@ -481,28 +507,7 @@ int main(){
 
 
 
-            char ser_dev[50];
-          	int ser_err;
-          	char param_id[17];
-          	unsigned char ser_dev_set;
-
-            strcpy (ser_dev, CFG_SER_DEV); /* default serial device */
-            if (ser_dev_set == 0)
-          		printf ("Serial device (default): %s\n\n", ser_dev);
-          	else
-          		printf ("Serial device: %s\n\n", ser_dev);
-
-          	/* try to open the serial device */
-          	ser_err = ser_open (&ser, &oldtio, ser_dev, CFG_SER_BAUD);
-            /* if everything ok */
-          	if (! ser_err){
-              //printf("Opend serial device!\n");
-          		ml_init();
-              pos_init();
-          		ml_set_monitor_all();
-          	}else{
-          		printf ("Unable to open serial device\n");
-          	}
+      
 
             char result;
           	unsigned long now = millis();
