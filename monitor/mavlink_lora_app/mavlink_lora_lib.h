@@ -1,8 +1,8 @@
 /***************************************************************************
 # MavLink LoRa library
-# MavLink long range communication library 
+# MavLink long range communication library
 # Copyright (c) 2017-2018, Kjeld Jensen <kjen@mmmi.sdu.dk> <kj@kjen.dk>
-# SDU UAS Center, http://sdu.dk/uas 
+# SDU UAS Center, http://sdu.dk/uas
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -234,5 +234,4 @@ extern void ml_parse_msg(unsigned char *msg);
 extern short ml_tx_update (void);
 
 /***************************************************************************/
-#endif 
-
+#endif

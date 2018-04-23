@@ -1,12 +1,12 @@
 /****************************************************************************
-Project:		
+Project:
 File:				app.c
 Purpose:		Scheduler application routines
 Author:			Kjeld Jensen <kjeld@cetus.dk>
 
 History:
 
-date       name       version description 
+date       name       version description
 ---------- ---------- ------- -------------------------------------------
 2009-03-16 Kjeld J.     1.0   software written
 
@@ -60,7 +60,7 @@ static unsigned long secs_init = 0;
 
 unsigned long millis(void)
 {
-    struct timeval te; 
+    struct timeval te;
     gettimeofday(&te, NULL); /* get current time */
 
 	if (secs_init == 0)
@@ -78,7 +78,7 @@ int app_init(int argc, char **argv)
 	char param_id[17];
 	unsigned char ser_dev_set;
 	int i;
-	int status; 
+	int status;
 
 	ser_dev_set = 0;
 	status = APP_INIT_OK;
@@ -96,8 +96,8 @@ int app_init(int argc, char **argv)
 	{
 		if (strchr(argv[i], '/'))
 		{
-			strcpy (ser_dev, argv[i]);	
-			ser_dev_set = 1;	
+			strcpy (ser_dev, argv[i]);
+			ser_dev_set = 1;
 		}
 		else if (strstr(argv[i], "monitor"))
 		{
@@ -160,7 +160,7 @@ int app_init(int argc, char **argv)
 
 		printf ("Command (default): Monitor all msgs\n");
 	}
-	
+
 	if (ser_dev_set == 0)
 		printf ("Serial device (default): %s\n\n", ser_dev);
 	else
@@ -168,7 +168,7 @@ int app_init(int argc, char **argv)
 
 	/* try to open the serial device */
 	ser_err = ser_open (&ser, &oldtio, ser_dev, CFG_SER_BAUD);
-	
+
 	/* if everything ok */
 	if (! ser_err)
 	{
@@ -266,10 +266,10 @@ int app_update(void)
 	unsigned long now = millis();
 	serbuf_cnt = SER_BUF_SIZE;
 	serbuf_cnt = ser_receive (ser, serbuf, serbuf_cnt);
-	
+
 	/* if we received new data */
 	if (serbuf_cnt > 0)
-	
+
 	{
 
 		result = ml_rx_update(now, serbuf, serbuf_cnt);
@@ -285,8 +285,8 @@ int app_update(void)
 			}
 			rxbuf_filtered_cnt = 0;
 		} */
-	} 
-	 
+	}
+
 	/* command */
 	switch (cmd)
 	{
@@ -324,4 +324,3 @@ void app_quit(void)
 	}
 }
 /***************************************************************************/
-

@@ -3,9 +3,9 @@
 # All rights reserved.
 
 PROJECT=mavlink_lora
-SOURCES=main.c app.c mavlink_lora_lib.c serial.c monitor.c mission_get.c mission_set.c param_get.c param_set.c param_list.c position.c
+SOURCES=mavlink_lora_lib.c main.c app.c serial.c monitor.c mission_get.c mission_set.c param_get.c param_set.c param_list.c position.c
 CC = gcc
-CFLAGS = -pedantic -ansi
+CFLAGS = -ansi
 
 default:
 	@echo ""
