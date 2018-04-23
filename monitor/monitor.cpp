@@ -520,7 +520,7 @@ int main(){
           		result = ml_rx_update(now, serbuf, serbuf_cnt);
           	}
 
-            sigsuspend(&wait_mask);
+            //sigsuspend(&wait_mask);
 
 
 
