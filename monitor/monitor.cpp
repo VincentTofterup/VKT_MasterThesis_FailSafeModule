@@ -25,6 +25,8 @@
 
 #include "mavlink_lora_lib.h"
 
+static sigset_t wait_mask;
+
 
 // Function for correction of yaw angle (replaces the atan2 function for more controll)
 float wrap(float x_h, float y_h){
@@ -481,21 +483,11 @@ int main(){
             }
 
 
-            //std::cout << "Px: ";
-            for (int i = 0; i < 12; i++) {
-              //std::cout << Px[i] << ", ";
-            }
-            //std::cout << std::endl;
-            //std::cout << "State: ";
-            for (int i = 0; i < 12; i++) {
-              //std::cout << state[i] << ", ";
-            }
 
             char ser_dev[50];
           	int ser_err;
           	char param_id[17];
           	unsigned char ser_dev_set;
-
 
             strcpy (ser_dev, CFG_SER_DEV); /* default serial device */
             if (ser_dev_set == 0)
@@ -521,8 +513,11 @@ int main(){
 
           	/* if we received new data */
           	if (serbuf_cnt > 0){
+              printf("New data received!\n");
           		result = ml_rx_update(now, serbuf, serbuf_cnt);
           	}
+
+            //sigsuspend(&wait_mask);
 
 
 
