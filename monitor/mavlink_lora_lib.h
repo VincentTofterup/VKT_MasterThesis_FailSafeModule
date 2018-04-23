@@ -44,8 +44,9 @@ Revision
 /***************************************************************************/
 /* parameters */
 
-#define PARAM_TOUT 15000 /* [ms] timeout for other msgs when exchanging parameters */
-#define MISSION_TOUT 10000 /* [ms] timeout for other msgs when exchanging mission */
+#define RX_BUF_SIZE	8050 /* size of the receive buffer, depends on system and application */
+#define PARAM_TOUT 2000 /* [ms] timeout for other msgs when exchanging parameters */
+#define MISSION_TOUT 2000 /* [ms] timeout for other msgs when exchanging mission */
 
 /* #define DROP_MSGS_WITH_ID {30, 32, 35, 36, 62, 109} */ /* AutoQuad long range default */
 
@@ -63,7 +64,6 @@ Revision
 /* defines */
 
 /* serial stream buffers */
-#define RX_BUF_SIZE	250
 #define TX_BUF_SIZE	150
 
 /* mavlink message content */
@@ -221,17 +221,19 @@ mavlink_global_position_int_t ml_unpack_msg_global_position_int (unsigned char *
 unsigned short ml_unpack_msg_mission_count (unsigned char *payload);
 mavlink_mission_item_t ml_unpack_msg_mission_item (unsigned char *payload);
 mavlink_statustext_t ml_unpack_msg_statustext (unsigned char *payload);
-short ml_queue_msg_param_request_read (char *param_id);
+void ml_queue_msg_generic (unsigned char msg_id, unsigned char payload_len, unsigned char *payload);
+void ml_queue_msg_param_request_read (char *param_id);
 void ml_queue_msg_param_request_list (void);
-short ml_queue_msg_param_set (char *param_id, float param_value);
-short ml_queue_msg_mission_request_list (void);
-short ml_queue_msg_mission_ack (void);
+void ml_queue_msg_param_set (char *param_id, float param_value);
+void ml_queue_msg_mission_request (unsigned short seq);
+void ml_queue_msg_mission_request_list (void);
+void ml_queue_msg_mission_ack (void);
 
 /***************************************************************************/
 /* callback functions */
 
 extern void ml_parse_msg(unsigned char *msg);
-extern short ml_tx_update (void);
+extern void ml_tx_update (void);
 
 /***************************************************************************/
 #endif 
