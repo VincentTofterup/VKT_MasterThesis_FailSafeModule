@@ -62,7 +62,7 @@ float wrap(float x_h, float y_h){
 
 
 #define SER_BUF_SIZE 1000
-unsigned long millis(void);
+unsigned long millis_ml(void);
 
 /***************************************************************************/
 /* variables */
@@ -74,11 +74,11 @@ static unsigned char serbuf[SER_BUF_SIZE];
 static short serbuf_cnt;
 static unsigned char cmd;
 
-/* implementation of the arduino style millis() to return current number of
-   milliseconds since application launch */
+/* implementation of the arduino style millis_ml() to return current number of
+   millis_mleconds since application launch */
 static unsigned long secs_init = 0;
 
-unsigned long millis(void)
+unsigned long millis_ml(void)
 {
     struct timeval te;
     gettimeofday(&te, NULL); /* get current time */
@@ -155,7 +155,7 @@ void pos_parse_msg(unsigned char *msg, unsigned long now){
 
 /***************************************************************************/
 void ml_parse_msg(unsigned char *msg){
-  pos_parse_msg(msg, millis());
+  pos_parse_msg(msg, millis_ml());
 }
 /***************************************************************************/
 #define CUTOFF 4
@@ -526,7 +526,7 @@ int main(){
 
 
             char result;
-          	unsigned long now = millis();
+          	unsigned long now = millis_ml();
           	serbuf_cnt = SER_BUF_SIZE;
           	serbuf_cnt = ser_receive (ser, serbuf, serbuf_cnt);
 
