@@ -148,7 +148,7 @@ double Pxdot[12];
 double old_Pxdot[12];
 
 
-void thau(Px[12],Pxdot[12],state[12]){
+void thau(double &Px[12],double &Pxdot[12],double &state[12]){
 
   // parameters
   float g = 9.81;
