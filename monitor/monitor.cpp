@@ -319,7 +319,7 @@ int main(){
             //start = std::time(nullptr);
             //float dt = (start - end)/10000.0;
             //end = std::time(nullptr);
-            dt = 0.10;
+            float dt = 0.10;
 
 
             if (firstrun == 1) { // first run
