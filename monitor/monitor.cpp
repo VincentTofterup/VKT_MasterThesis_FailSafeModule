@@ -161,10 +161,6 @@ int main(){
 	  printf("\n  ERROR ! in Setting attributes");
 	}
 
-  std::cout << "Setting variables.." << std::endl;
-
-
-
   int firstrun = 1;
 
   // Mavlink init:
