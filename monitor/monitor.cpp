@@ -345,11 +345,48 @@ int main(){
               state[10] = pos[1];
               state[11] = pos[2];
             }
+            // State Estimate change, from matlab:
+            Pxdot[0] = (Px[3] + Px[5] * Px[1] + Px[4] * Px[0] * Px[1]); // Px(4)+Px(6)*Px(2)+Px(5)*Px(1)*Px(2)
+            Pxdot[1] = (Px[4] - Px[5] * Px[0]); // Px(5)-Px(6)*Px(1)
+            Pxdot[2] = (Px[5] + Px[4] * Px[0]); // Px(6)+Px(5)*Px(1)
+            Pxdot[3] = (((Iy-Iz)/Ix) * Px[5] * Px[4] + (taux/Ix));  // ((Iy-Iz)/Ix)*Px(6)*Px(5)+(tauxP/Ix)
+            Pxdot[4] = (((Iz-Ix)/Iy) * Px[3] * Px[5] + (tauy/Iy));  // ((Iz-Ix)/Iy)*Px(4)*Px(6)+(tauyP/Iy)
+            Pxdot[5] = (((Ix-Iy)/Iz) * Px[3] * Px[4] + (tauz/Iz));  // ((Ix-Iy)/Iz)*Px(4)*Px(5)+(tauzP/Iz)
+            Pxdot[6] = (Px[5] * Px[7] - Px[4] * Px[10] - (g * Px[1]));  // Px(6)*Px(8)-Px(5)*Px(11)-g*Px(2)
+            Pxdot[7] = (Px[3] * Px[8] - Px[5] * Px[6] + (g * Px[0])); // Px(4)*Px(9)-Px(6)*Px(7)+g*Px(1)
+            Pxdot[8] = (Px[4] * Px[6] - Px[3] * Px[7] + (g * (ft/m)));  // Px(5)*Px(7)-Px(4)*Px(8)+g*(ftP/m)
+            Pxdot[9] = (Px[8] * (Px[0] * Px[2] + Px[1]) - Px[7] * (Px[2] - Px[0] * Px[1]) + Px[6]); // Px(9)*(Px(1)*Px(3)+Px(2))-Px(8)*(Px(3)-Px(1)*Px(2))+Px(7)
+            Pxdot[10] = (Px[7] * (1 + Px[0] * Px[1] * Px[2]) - Px[8] * (Px[0] - Px[1] * Px[2]) + Px[6] * Px[2]);  // Px(8)*(1+Px(1)*Px(2)*Px(3))-Px(9)*(Px(1)-Px(2)*Px(3))+Px(7)*Px(3)
+            Pxdot[11] = (Px[8] - Px[6] * Px[1] + Px[7] * Px[0]); // Px(9)-Px(7)*Px(1)+Px(8)*Px(1)
 
-            thau(Px[12],Pxdot[12],state[12]);
 
+            // Matlab functions for the following:
+            //PThau = lyap((A+0.5*eye(12))',-C'*C);
+            //PThau = inv(PThau)*C';
+            // Just copy pasted from matlab solution and writting into the following equations:
+            // State estimate update, first Pxdot, then Px.
+            // Pxdot = Pxdot + PThau*(C*x-C*Px);
+            // Px    = Px + Pxdot * dt;
 
+            Px[0] = Px[0] + ((Pxdot[0] + (1.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
+            Px[1] = Px[1] + ((Pxdot[1] + (1.5 * (state[1] - Px[1]) + 0.5 * (state[4] - Px[4]))) * dt);
+            Px[2] = Px[2] + ((Pxdot[2] + (1.5 * (state[2] - Px[2]) + 0.5 * (state[5] - Px[5]))) * dt);
+            Px[3] = Px[3] + ((Pxdot[3] + (0.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
+            Px[4] = Px[4] + ((Pxdot[4] + (0.5 * (state[1] - Px[1]) + 0.5 * (state[4] - Px[4]))) * dt);
+            Px[5] = Px[5] + ((Pxdot[5] + (0.5 * (state[2] - Px[2]) + 0.5 * (state[5] - Px[5]))) * dt);
+            Px[6] = Px[6] + ((Pxdot[6] + (state[9] - Px[9])) * dt);
+            Px[7] = Px[7] + ((Pxdot[7] + (state[10] - Px[10])) * dt);
+            Px[8] = Px[8] + ((Pxdot[8] + (state[11] - Px[11])) * dt);
+            Px[9] = Px[9] + ((Pxdot[9] + 2.0 * (state[9] - Px[9])) * dt);
+            Px[10] = Px[10] + ((Pxdot[10] + 2.0 * (state[10] - Px[10])) * dt);
+            Px[11] = Px[11] + ((Pxdot[11] + 2.0 * (state[11] - Px[11])) * dt);
 
+            for (int i = 0; i < 12; i++) {
+              if (Px[i] != Px[i] ) { // check for nan
+                  Pxdot[i] = old_Pxdot[i];
+                  Px[i] = old_Px[i];
+              }
+            }
 
             // mavlink gps extraction
             char result;
