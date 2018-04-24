@@ -535,10 +535,7 @@ int main(){
               }
             }
 
-
-
-
-
+            // mavlink gps extraction
             char result;
           	unsigned long now = millis_ml();
           	serbuf_cnt = SER_BUF_SIZE;
