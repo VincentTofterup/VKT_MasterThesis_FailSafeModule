@@ -158,7 +158,8 @@ void ml_parse_msg(unsigned char *msg){
   pos_parse_msg(msg, millis_ml());
 }
 /***************************************************************************/
-#define CUTOFF 4
+// WiringPi definitions 
+#define CUTOFF 5
 
 
 int main(){
