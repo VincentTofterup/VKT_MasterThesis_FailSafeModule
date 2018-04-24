@@ -581,24 +581,24 @@ int main(){
             }
 
             if (roll-roll_offset > 50.0) {
-              std::cout << "roll exceed limit!" << std::endl;
+              std::cout << "roll exceed(lower) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
               usleep(500); // Wait 500ms before activating parachute
               //pwmWrite(PARARACHUTE,OPEN);
             }else if (roll-roll_offset < -50.0) {
-              std::cout << "roll exceed limit!" << std::endl;
+              std::cout << "roll exceed(larger) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
               usleep(500); // Wait 500ms before activating parachute
               //pwmWrite(PARARACHUTE,OPEN);
             }
 
             if (pitch-pitch_offset > 50.0) {
-              std::cout << "pitch exceed limit!" << std::endl;
+              std::cout << "pitch exceed(large) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
               usleep(500); // Wait 500ms before activating parachute
               //pwmWrite(PARARACHUTE,OPEN);
             }else if (pitch-pitch_offset < -50.0) {
-              std::cout << "pitch exceed limit!" << std::endl;
+              std::cout << "pitch exceed(lower) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
               usleep(500); // Wait 500ms before activating parachute
               //pwmWrite(PARARACHUTE,OPEN);
