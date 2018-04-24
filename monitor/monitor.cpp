@@ -564,9 +564,9 @@ int main(){
             }
 
 
-            digitalWrite (LED, HIGH) ;	// On
+            digitalWrite (CUTOFF, HIGH) ;	// On
             delay (500) ;		// mS
-            digitalWrite (LED, LOW) ;	// Off
+            digitalWrite (CUTOFF, LOW) ;	// Off
             delay (500) ;
 
 
