@@ -1,4 +1,37 @@
 #include <iostream>
+#include <stdio.h>
+#include <fcntl.h>                                                   /* File Control Definitions           */
+#include <termios.h>                                                 /* POSIX Terminal Control Definitions */
+#include <unistd.h>                                                  /* UNIX Standard Definitions          */
+#include <errno.h>                                                   /* ERROR Number Definitions           */
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <math.h>
+#include <algorithm>
+#include <cstring>
+#include <ctime>
+#include <chrono>
+#include <unistd.h>
+#include <sys/time.h> // gettimeofday system call
+#include <serial.h>
+
+#include <time.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/signal.h>
+#include <sys/types.h>
+#include <stdio.h>
+
+
+
+#include <wiringPi.h> // GPIO control
+
+#include "mavlink_lora_lib.h"
+
+#include "LatLong-UTMconversion.h"
+#include "polygon.h"
 using namespace std;
 
 
