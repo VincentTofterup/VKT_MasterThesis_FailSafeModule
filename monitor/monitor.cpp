@@ -174,7 +174,7 @@ int main(){
   pwmSetRange (2000); // needs to be calibrated
   pwmSetClock (192);  // needs to be calibrated
   pwmWrite(PARARACHUTE,CLOSED);
-  std::cout << "wirintPi setup done" << std::endl
+  std::cout << "wirintPi setup done" << std::endl;
 
   int fd;
 
