@@ -316,9 +316,9 @@ int main(){
             float degTorad = (2 * M_PI) / 360;
 
             // Thau Observer
-            start = std::time(nullptr);
-            float dt = (start - end)/10000.0;
-            end = std::time(nullptr);
+            //start = std::time(nullptr);
+            //float dt = (start - end)/10000.0;
+            //end = std::time(nullptr);
             dt = 0.10;
 
 
