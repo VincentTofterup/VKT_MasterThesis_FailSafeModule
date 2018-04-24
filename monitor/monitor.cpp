@@ -114,7 +114,18 @@ int main(){
   pwmSetRange (2000); // needs to be calibrated
   pwmSetClock (192);  // needs to be calibrated
   pwmWrite(PARARACHUTE,CLOSED);
-  std::cout << "wirintPi setup done" << std::endl;
+
+  // Thau Observer
+  // Initial state estimate is 0.0 in each state
+  for (int i = 0; i < 12; i++) {
+    Pxdot[i] = 0.0;
+    old_Pxdot[i] = 0.0;
+    Px[i] = 0.0;
+    old_Px[i] = 0.0;
+
+  }
+
+
 
   int fd;
 
@@ -157,7 +168,7 @@ int main(){
 
   std::cout << "Setting variables.." << std::endl;
 
-  
+
 
   int firstrun = 1;
 

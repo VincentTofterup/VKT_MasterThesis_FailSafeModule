@@ -150,11 +150,3 @@ double Px[12];
 double old_Px[12];
 double Pxdot[12];
 double old_Pxdot[12];
-// Initial state estimate is 0.0 in each state
-for (int i = 0; i < 12; i++) {
-  Pxdot[i] = 0.0;
-  old_Pxdot[i] = 0.0;
-  Px[i] = 0.0;
-  old_Px[i] = 0.0;
-
-}
