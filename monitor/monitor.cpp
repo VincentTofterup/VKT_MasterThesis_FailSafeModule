@@ -158,13 +158,21 @@ void ml_parse_msg(unsigned char *msg){
   pos_parse_msg(msg, millis_ml());
 }
 /***************************************************************************/
-// WiringPi definitions 
+// WiringPi definitions
 #define CUTOFF 5
+#define PARARACHUTE 6
+#define CLOSED 150
+#define OPEN 200
 
 
 int main(){
   wiringPiSetup () ;
   pinMode (CUTOFF, OUTPUT) ;
+  pinMode (PARARACHUTE, PWM_OUTPUT);
+  pwmSetMode (PWM_MODE_MS);
+  pwmSetRange (2000);
+  pwmSetClock (192);
+  pwmWrite(PARARACHUTE,CLOSED);
 
   int fd;
 
@@ -559,16 +567,43 @@ int main(){
               std::cout << "Current position inside defined polygon! (supposed to be inside at all times) " << std::endl;
             }
 
+
+
             Point poly2[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting-10.0}};
             if (! isInside(poly2, 3, tmp)) {
               std::cout << "Current position outside defined polygon! (supposed to be outside at all times) " << std::endl;
+
+            }
+
+            if (roll-roll_offset > 50.0) {
+              std::cout << "roll exceed limit!" << std::endl;
+              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+              usleep(500); // Wait 500ms before activating parachute
+              pwmWrite(PARARACHUTE,OPEN);
+            }else if (roll-roll_offset < -50.0) {
+              std::cout << "roll exceed limit!" << std::endl;
+              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+              usleep(500); // Wait 500ms before activating parachute
+              pwmWrite(PARARACHUTE,OPEN);
+            }
+
+            if (pitch-pitch_offset > 50.0) {
+              std::cout << "pitch exceed limit!" << std::endl;
+              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+              usleep(500); // Wait 500ms before activating parachute
+              pwmWrite(PARARACHUTE,OPEN);
+            }else if (pitch-pitch_offset < -50.0) {
+              std::cout << "pitch exceed limit!" << std::endl;
+              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+              usleep(500); // Wait 500ms before activating parachute
+              pwmWrite(PARARACHUTE,OPEN);
             }
 
 
-            digitalWrite (CUTOFF, HIGH) ;	// On
-            delay (500) ;		// mS
-            digitalWrite (CUTOFF, LOW) ;	// Off
-            delay (500) ;
+
+
+
+
 
 
 
