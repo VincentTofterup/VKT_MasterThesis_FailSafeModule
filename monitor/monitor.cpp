@@ -215,6 +215,8 @@ int main(){
 	  printf("\n  ERROR ! in Setting attributes");
 	}
 
+  std::cout << "Setting variables.." << std::endl;
+
   // Possible accelerometer scales (and their register bit settings) are:
   // 2 G (00), 4 G (01), 8 G (10), and 16 G  (11).
   float aRange = 2.0;       // 2G acceleration resolution (max. sensitivity)
