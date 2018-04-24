@@ -142,7 +142,14 @@ float roll_offset = 4.0;
 float pitch_offset = 0.5;
 
 // thau observer varibles:
-double pos[3], old_pos[3], state[12], old_state[12], Px[12], old_Px[12], Pxdot[12], old_Pxdot[12];
+double pos[3];
+double old_pos[3];
+double state[12];
+double old_state[12];
+double Px[12];
+double old_Px[12];
+double Pxdot[12];
+double old_Pxdot[12];
 // Initial state estimate is 0.0 in each state
 for (int i = 0; i < 12; i++) {
   Pxdot[i] = 0.0;
