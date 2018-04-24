@@ -30,8 +30,6 @@
 
 #include "mavlink_lora_lib.h"
 
-#include "LatLong-UTMconversion.h"
-#include "polygon.h"
 using namespace std;
 
 
