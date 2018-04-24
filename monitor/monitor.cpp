@@ -159,20 +159,22 @@ void ml_parse_msg(unsigned char *msg){
 }
 /***************************************************************************/
 // WiringPi definitions
-#define CUTOFF 5
-#define PARARACHUTE 6
-#define CLOSED 150
-#define OPEN 200
+#define CUTOFF 5  // pin 24
+#define PARARACHUTE 6 // pin 25
+#define CLOSED 150  // needs to be calibrated
+#define OPEN 200  // needs to be calibrated
 
 
 int main(){
+  std::cout << "Entering main()" << std::endl;
   wiringPiSetup () ;
   pinMode (CUTOFF, OUTPUT) ;
   pinMode (PARARACHUTE, PWM_OUTPUT);
   pwmSetMode (PWM_MODE_MS);
-  pwmSetRange (2000);
-  pwmSetClock (192);
+  pwmSetRange (2000); // needs to be calibrated
+  pwmSetClock (192);  // needs to be calibrated
   pwmWrite(PARARACHUTE,CLOSED);
+  std::cout << "wirintPi setup done" << std::endl
 
   int fd;
 
