@@ -23,6 +23,9 @@
 #include <sys/types.h>
 #include <stdio.h>
 
+#include <wiringPi.h> // GPIO control
+
+
 #include "mavlink_lora_lib.h"
 
 #include "LatLong-UTMconversion.h"
@@ -155,10 +158,13 @@ void ml_parse_msg(unsigned char *msg){
   pos_parse_msg(msg, millis());
 }
 /***************************************************************************/
-
+#define CUTOFF 4
 
 
 int main(){
+  wiringPiSetup () ;
+  pinMode (CUTOFF, OUTPUT) ;
+
   int fd;
 
   fd = open("/dev/ttyUSB0",O_RDWR | O_NOCTTY);                       /* ttyUSB0 is the FT232 based USB2SERIAL Converter   */
@@ -556,6 +562,12 @@ int main(){
             if (! isInside(poly2, 3, tmp)) {
               std::cout << "Current position outside defined polygon! (supposed to be outside at all times) " << std::endl;
             }
+
+
+            digitalWrite (LED, HIGH) ;	// On
+            delay (500) ;		// mS
+            digitalWrite (LED, LOW) ;	// Off
+            delay (500) ;
 
 
 

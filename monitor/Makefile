@@ -3,9 +3,9 @@
 # All rights reserved.
 
 PROJECT=failsafe_module
-SOURCES= LatLong-UTMconversion.h polygon.h mavlink_lora_lib.c serial.c monitor.cpp 
+SOURCES= LatLong-UTMconversion.h polygon.h mavlink_lora_lib.c serial.c monitor.cpp
 CC = g++
-CFLAGS = -std=c++11
+CFLAGS = -std=c++11 -lwiringPi
 
 default:
 	@echo ""
