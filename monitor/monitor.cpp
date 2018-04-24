@@ -169,11 +169,11 @@ int main(){
   std::cout << "Entering main()" << std::endl;
   wiringPiSetup () ;
   pinMode (CUTOFF, OUTPUT) ;
-  pinMode (PARARACHUTE, PWM_OUTPUT);
-  pwmSetMode (PWM_MODE_MS);
-  pwmSetRange (2000); // needs to be calibrated
-  pwmSetClock (192);  // needs to be calibrated
-  pwmWrite(PARARACHUTE,CLOSED);
+  //pinMode (PARARACHUTE, PWM_OUTPUT);
+  //pwmSetMode (PWM_MODE_MS);
+  //pwmSetRange (2000); // needs to be calibrated
+  //pwmSetClock (192);  // needs to be calibrated
+  //pwmWrite(PARARACHUTE,CLOSED);
   std::cout << "wirintPi setup done" << std::endl;
 
   int fd;
@@ -581,24 +581,24 @@ int main(){
               std::cout << "roll exceed limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
               usleep(500); // Wait 500ms before activating parachute
-              pwmWrite(PARARACHUTE,OPEN);
+              //pwmWrite(PARARACHUTE,OPEN);
             }else if (roll-roll_offset < -50.0) {
               std::cout << "roll exceed limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
               usleep(500); // Wait 500ms before activating parachute
-              pwmWrite(PARARACHUTE,OPEN);
+              //pwmWrite(PARARACHUTE,OPEN);
             }
 
             if (pitch-pitch_offset > 50.0) {
               std::cout << "pitch exceed limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
               usleep(500); // Wait 500ms before activating parachute
-              pwmWrite(PARARACHUTE,OPEN);
+              //pwmWrite(PARARACHUTE,OPEN);
             }else if (pitch-pitch_offset < -50.0) {
               std::cout << "pitch exceed limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
               usleep(500); // Wait 500ms before activating parachute
-              pwmWrite(PARARACHUTE,OPEN);
+              //pwmWrite(PARARACHUTE,OPEN);
             }
 
 
