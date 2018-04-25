@@ -422,24 +422,24 @@ int main(){
             if (roll-roll_offset > 45.0) {
               std::cout << "roll exceed(lower) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(500));
+              std::this_thread::sleep_for (std::chrono::milliseconds(1000));
               pwmWrite(PARARACHUTE,OPEN);
             }else if (roll-roll_offset < -45.0) {
               std::cout << "roll exceed(larger) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(500));
+              std::this_thread::sleep_for (std::chrono::milliseconds(1000));
               pwmWrite(PARARACHUTE,OPEN);
             }
 
             if (pitch-pitch_offset > 45.0) {
               std::cout << "pitch exceed(large) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(500));
+              std::this_thread::sleep_for (std::chrono::milliseconds(1000));
               pwmWrite(PARARACHUTE,OPEN);
             }else if (pitch-pitch_offset < -45.0) {
               std::cout << "pitch exceed(lower) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(500));
+              std::this_thread::sleep_for (std::chrono::milliseconds(1000));
               pwmWrite(PARARACHUTE,OPEN);
             }
 
