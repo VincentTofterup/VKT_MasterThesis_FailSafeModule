@@ -95,7 +95,7 @@ void ml_parse_msg(unsigned char *msg){
 // WiringPi definitions
 #define CUTOFF 5  // pin 24
 #define PARARACHUTE 6 // pin 25
-#define CLOSED 150  // needs to be calibrated
+#define CLOSED 100  // needs to be calibrated
 #define OPEN 200  // needs to be calibrated
 
 
@@ -440,8 +440,11 @@ int main(){
               usleep(500); // Wait 500ms before activating parachute
               pwmWrite(PARARACHUTE,OPEN);
             }
+
+            std::cout << "Open" << std::endl;
             pwmWrite(PARARACHUTE,OPEN);
             usleep(1000);
+            std::cout << "Closed" << std::endl;
             pwmWrite(PARARACHUTE,CLOSED);
 
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
