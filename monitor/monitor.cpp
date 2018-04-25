@@ -26,6 +26,7 @@
 #include "mavlink_lora_lib.h" // Kjelds mavlink library
 #include "LatLong-UTMconversion.h" // partially user implemented lat lon conversion class
 #include "polygon.h" // polygon definition and used implemented code
+#include <chrono>
 
 static sigset_t wait_mask;
 
@@ -443,9 +444,10 @@ int main(){
 
             std::cout << "Open" << std::endl;
             pwmWrite(PARARACHUTE,OPEN);
-            usleep(1000);
+            std::this_thread::sleep_for (std::chrono::seconds(1));
             std::cout << "Closed" << std::endl;
             pwmWrite(PARARACHUTE,CLOSED);
+            std::this_thread::sleep_for (std::chrono::seconds(1));
 
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
             memmove( old_state, state, sizeof(state) ); // old state update
