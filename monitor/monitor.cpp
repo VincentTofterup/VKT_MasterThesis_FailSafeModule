@@ -26,7 +26,8 @@
 #include "mavlink_lora_lib.h" // Kjelds mavlink library
 #include "LatLong-UTMconversion.h" // partially user implemented lat lon conversion class
 #include "polygon.h" // polygon definition and used implemented code
-#include <chrono>
+#include <chrono> // sleep this thread
+#include <thread> // sleep this thread
 
 static sigset_t wait_mask;
 
