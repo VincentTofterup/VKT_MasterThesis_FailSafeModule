@@ -120,8 +120,6 @@ int main(){
 
   }
 
-
-
   int fd;
 
   fd = open("/dev/ttyUSB0",O_RDWR | O_NOCTTY);                       /* ttyUSB0 is the FT232 based USB2SERIAL Converter   */
@@ -442,7 +440,9 @@ int main(){
               usleep(500); // Wait 500ms before activating parachute
               pwmWrite(PARARACHUTE,OPEN);
             }
-
+            pwmWrite(PARARACHUTE,OPEN);
+            usleep(1000);
+            pwmWrite(PARARACHUTE,CLOSED);
 
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
             memmove( old_state, state, sizeof(state) ); // old state update
