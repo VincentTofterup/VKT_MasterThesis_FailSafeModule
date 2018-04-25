@@ -96,9 +96,9 @@ void ml_parse_msg(unsigned char *msg){
 /***************************************************************************/
 // WiringPi definitions
 #define CUTOFF 5  // pin 24
-#define PARARACHUTE 6 // pin 25
-#define CLOSED 100  // needs to be calibrated
-#define OPEN 200  // needs to be calibrated
+#define PARARACHUTE 1 // pin 25
+#define CLOSED 50  // needs to be calibrated
+#define OPEN 100  // needs to be calibrated
 
 
 int main(){
@@ -108,8 +108,8 @@ int main(){
   digitalWrite (CUTOFF, LOW) ;	// Cutoff Motor system!
   pinMode (PARARACHUTE, PWM_OUTPUT);
   pwmSetMode (PWM_MODE_MS);
-  pwmSetRange (2000); // needs to be calibrated
-  pwmSetClock (192);  // needs to be calibrated
+  pwmSetClock(384); //clock at 50kHz (20us tick)
+  pwmSetRange(1000); //range at 1000 ticks (20ms)
   pwmWrite(PARARACHUTE,CLOSED);
 
   // Thau Observer
