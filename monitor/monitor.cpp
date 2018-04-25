@@ -97,8 +97,8 @@ void ml_parse_msg(unsigned char *msg){
 // WiringPi definitions
 #define CUTOFF 5  // pin 24
 #define PARARACHUTE 1 // pin 25
-#define CLOSED 50  // needs to be calibrated
-#define OPEN 100  // needs to be calibrated
+#define CLOSED 40  // needs to be calibrated
+#define OPEN 70  // needs to be calibrated
 
 
 int main(){
