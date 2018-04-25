@@ -397,7 +397,7 @@ int main(){
 
 
             //std::cout << "Battery voltage: " << battery << std::endl;
-            std::cout << "pos_raw[lat,lon,alt]: " << pos_raw[0] << ", " << pos_raw[1] << ", " << pos_raw[2] << std::endl;
+            //std::cout << "pos_raw[lat,lon,alt]: " << pos_raw[0] << ", " << pos_raw[1] << ", " << pos_raw[2] << std::endl;
 
             double northing, easting;
             int zone = 32;
@@ -405,50 +405,43 @@ int main(){
 
             LLtoUTM(ellip, pos_raw[0], pos_raw[1], northing, easting, zone);
 
-            std::cout << "UTM(norting,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
+            //std::cout << "UTM(norting,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
 
             Point tmp = {northing, easting};
             Point poly1[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
             if (isInside(poly1, 3, tmp)) {
-              std::cout << "Current position inside defined polygon! (supposed to be inside at all times) " << std::endl;
+              //std::cout << "Current position inside defined polygon! (supposed to be inside at all times) " << std::endl;
             }
 
             Point poly2[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting-10.0}};
             if (! isInside(poly2, 3, tmp)) {
-              std::cout << "Current position outside defined polygon! (supposed to be outside at all times) " << std::endl;
+              //std::cout << "Current position outside defined polygon! (supposed to be outside at all times) " << std::endl;
 
             }
 
             if (roll-roll_offset > 50.0) {
               std::cout << "roll exceed(lower) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              usleep(500); // Wait 500ms before activating parachute
+              std::this_thread::sleep_for (std::chrono::seconds(0.5));
               pwmWrite(PARARACHUTE,OPEN);
             }else if (roll-roll_offset < -50.0) {
               std::cout << "roll exceed(larger) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              usleep(500); // Wait 500ms before activating parachute
+              std::this_thread::sleep_for (std::chrono::seconds(0.5));
               pwmWrite(PARARACHUTE,OPEN);
             }
 
             if (pitch-pitch_offset > 50.0) {
               std::cout << "pitch exceed(large) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              usleep(500); // Wait 500ms before activating parachute
+              std::this_thread::sleep_for (std::chrono::seconds(0.5));
               pwmWrite(PARARACHUTE,OPEN);
             }else if (pitch-pitch_offset < -50.0) {
               std::cout << "pitch exceed(lower) limit!" << std::endl;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              usleep(500); // Wait 500ms before activating parachute
+              std::this_thread::sleep_for (std::chrono::seconds(0.5));
               pwmWrite(PARARACHUTE,OPEN);
             }
-
-            std::cout << "Open" << std::endl;
-            pwmWrite(PARARACHUTE,OPEN);
-            std::this_thread::sleep_for (std::chrono::seconds(1));
-            std::cout << "Closed" << std::endl;
-            pwmWrite(PARARACHUTE,CLOSED);
-            std::this_thread::sleep_for (std::chrono::seconds(1));
 
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
             memmove( old_state, state, sizeof(state) ); // old state update
