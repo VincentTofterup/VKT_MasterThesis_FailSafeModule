@@ -441,10 +441,10 @@ int main(){
             LLtoUTM(ellip, lat3, lon3, n3, e3, zone);
             LLtoUTM(ellip, lat4, lon4, n4, e4, zone);
 
-            std::cout << std::setprecision(16) << e1, << ", " << n1 << std::endl;
-            std::cout << std::setprecision(16) << e2, << ", " << n2 << std::endl;
-            std::cout << std::setprecision(16) << e3, << ", " << n3 << std::endl;
-            std::cout << std::setprecision(16) << e4, << ", " << n4 << std::endl;
+            std::cout << std::setprecision(16) << e1 << ", " << n1 << std::endl;
+            std::cout << std::setprecision(16) << e2 << ", " << n2 << std::endl;
+            std::cout << std::setprecision(16) << e3 << ", " << n3 << std::endl;
+            std::cout << std::setprecision(16) << e4 << ", " << n4 << std::endl;
 
             LLtoUTM(ellip, pos_raw[0], pos_raw[1], northing, easting, zone);
 
