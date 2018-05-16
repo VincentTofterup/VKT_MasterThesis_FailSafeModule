@@ -32,6 +32,8 @@
 
 static sigset_t wait_mask;
 
+uint8_t fix;
+
 
 // Function for correction of yaw angle (replaces the atan2 function for more controll)
 float wrap(float x_h, float y_h){
@@ -69,8 +71,7 @@ void pos_parse_msg(unsigned char *msg, unsigned long now){
         pos_raw[1] =  (double) gri.lon/10000000;
         pos_raw[2] =  (double) gri.alt/1000;
 
-        std::cout << setprecision(8) << gri.fix_type << std::end;
-
+        fix = gri.fix_type;
 				//printf ("GPS_RAW_INT ");
 				//printf ("%s", s);
 				//fprintf (f, "GPS_RAW_INT,%s", s);
@@ -473,7 +474,7 @@ int main(){
             northing_int = northing;
             easting_int = easting;
 
-            std::cout << std::setprecision(8) << "lat: " << pos_raw[0] << "lon:" << pos_raw[1] <<std::endl;
+            std::cout << std::setprecision(8) << fix <<std::endl;
 
             //std::cout << "UTM(northing,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
 
