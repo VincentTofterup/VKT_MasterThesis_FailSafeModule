@@ -282,7 +282,7 @@ int main(){
 
 
 
-          
+
 
 
 
@@ -485,21 +485,21 @@ int main(){
             }else{
               breach = false;
               activation = 0;
+            }*/
+
+
+            double mag = sqrt(pow(ax,2) + pow(ay,2) + pow(az,2)) / 3;
+            if(mag < 1.5)
+              freefall ++;
+            if(freefall > 14 && pos_raw[2] > 10.0) { // scales to almost 10 meter freefall, and freefall can only occur once we're 10 meterabove ground
+              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+              //std::this_thread::sleep_for (std::chrono::milliseconds(100)); // just a little delay after motor stop
+              pwmWrite(PARARACHUTE,OPEN);
+              activation = 1;
+            }else{
+              activation = 0;
             }
 
-            if(!breach){
-              double mag = sqrt(pow(ax,2) + pow(ay,2) + pow(az,2)) / 3;
-              if(mag < 1.5)
-                freefall ++;
-              if(freefall > 14 && pos_raw[2] > 10.0) { // scales to almost 10 meter freefall, and freefall can only occur once we're 10 meterabove ground
-                digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-                //std::this_thread::sleep_for (std::chrono::milliseconds(100)); // just a little delay after motor stop
-                pwmWrite(PARARACHUTE,OPEN);
-                activation = 1;
-              }else{
-                activation = 0;
-              }
-            }*/
             //if (isInside(poly1, 3, tmp)) {
               //std::cout << "Current position inside defined polygon! (supposed to be inside at all times) " << std::endl;
             //}
@@ -549,7 +549,7 @@ int main(){
             auto end = std::chrono::system_clock::now();
             std::chrono::duration<double> elapsed_seconds = end-start;
             std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-            std::cout << "Elapsed time in this loop nr:" << n << ", time: " << elapsed_seconds.count() << std::endl;
+            std::cout << "AVG = " << mag <<", Elapsed time in this loop nr:" << n << ", time: " << elapsed_seconds.count() << std::endl;
 
 
           }
