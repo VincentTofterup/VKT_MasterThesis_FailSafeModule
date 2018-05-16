@@ -249,6 +249,7 @@ int main(){
             }
           }
           if(end_line){
+            auto start = std::chrono::system_clock::now();
             count = 0;
             n++;
 
@@ -537,6 +538,12 @@ int main(){
             firstrun = 2; // first time run variable, now velocities can be set correctly
             // reset heartbeat bool for check
             heartbeat = false;
+            auto end = std::chrono::system_clock::now();
+            std::chrono::duration<double> elapsed_seconds = end-start;
+            std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+            std::cout << "Elapsed time in this loop nr:" << n << "time: " << elapsed_seconds.count() << std::endl;
+
+
           }
         }
       }
