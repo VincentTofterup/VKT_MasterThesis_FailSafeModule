@@ -432,11 +432,21 @@ int main(){
 
             double e1, n1, e2, n2, e3, n3, e4, n4;
 
+            e1 = 589422;
+            n1 = 6148244;
+            e2 = 589447;
+            n2 = 6148246;
+            e3 = 589450;
+            n3 = 6148203;
+            e4 = 589423;
+            n4 = 6148200;
+
+
             double northing, easting;
             int zone = 32;
             int ellip = 22; // WGS84
 
-            LLtoUTM(ellip, lat1, lon1, n1, e1, zone);
+            /*LLtoUTM(ellip, lat1, lon1, n1, e1, zone);
             LLtoUTM(ellip, lat2, lon2, n2, e2, zone);
             LLtoUTM(ellip, lat3, lon3, n3, e3, zone);
             LLtoUTM(ellip, lat4, lon4, n4, e4, zone);
@@ -444,7 +454,7 @@ int main(){
             std::cout << std::setprecision(16) << e1 << ", " << n1 << std::endl;
             std::cout << std::setprecision(16) << e2 << ", " << n2 << std::endl;
             std::cout << std::setprecision(16) << e3 << ", " << n3 << std::endl;
-            std::cout << std::setprecision(16) << e4 << ", " << n4 << std::endl;
+            std::cout << std::setprecision(16) << e4 << ", " << n4 << std::endl;*/
 
             LLtoUTM(ellip, pos_raw[0], pos_raw[1], northing, easting, zone);
 
