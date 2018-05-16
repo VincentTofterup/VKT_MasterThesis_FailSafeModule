@@ -442,7 +442,7 @@ int main(){
             n4 = 6148200;
 
 
-            double northing, easting;
+            int northing, easting;
             int zone = 32;
             int ellip = 22; // WGS84
 
