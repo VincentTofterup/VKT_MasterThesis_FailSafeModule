@@ -489,11 +489,11 @@ int main(){
 
 
             double mag = sqrt(pow(ax,2.0) + pow(ay,2.0) + pow(az,2.0));
-            if(mag < 1.5)
+            if(mag < 0.4) // NEW THRESH
               freefall ++;
-            if(freefall > 14 && pos_raw[2] > 10.0) { // scales to almost 10 meter freefall, and freefall can only occur once we're 10 meterabove ground
+            if(freefall > 10) { // scales to almost 5 meter freefall, and freefall can only occur once we're 10 meterabove ground
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              //std::this_thread::sleep_for (std::chrono::milliseconds(100)); // just a little delay after motor stop
+              std::this_thread::sleep_for (std::chrono::milliseconds(400)); // adds ca 5 meters of freefall
               pwmWrite(PARARACHUTE,OPEN);
               activation = 1;
             }else{

@@ -480,7 +480,7 @@ int main(){
             if (!isInside(poly1, 4, tmp)) {
               breach = true;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(1000)); // scales to almost 5 meters freefall
+              std::this_thread::sleep_for (std::chrono::milliseconds(1400)); // scales to almost 10 meters freefall
               pwmWrite(PARARACHUTE,OPEN);
               activation = 1;
             }else{
@@ -488,7 +488,7 @@ int main(){
               activation = 0;
             }
 
-            if(!breach){
+            /*if(!breach){
               double mag = sqrt(pow(ax,2) + pow(ay,2) + pow(az,2)) / 3;
               if(mag < 1.5)
                 freefall ++;
@@ -500,7 +500,7 @@ int main(){
               }else{
                 activation = 0;
               }
-            }
+            }*/
             //if (isInside(poly1, 3, tmp)) {
               //std::cout << "Current position inside defined polygon! (supposed to be inside at all times) " << std::endl;
             //}
