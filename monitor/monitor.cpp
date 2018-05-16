@@ -527,7 +527,7 @@ int main(){
             //}
 
 
-            log_file << std::setprecision(8)<< n << ", " << ax << ", " << ay << ", " << az << ", " << easting << ", " << northing << ", " << pos_raw[2] << ", " << activation << std::endl;
+            log_file << std::setprecision(8)<< n << ", " << ax << ", " << ay << ", " << az << ", " << easting_int << ", " << northing_int << ", " << pos_raw[2] << ", " << activation << std::endl;
             std::cout << easting << ", " << northing << ", " << pos_raw[2] << std::endl;
 
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
