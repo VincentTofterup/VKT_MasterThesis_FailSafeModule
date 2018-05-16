@@ -508,7 +508,7 @@ int main(){
             //}
 
 
-            log_file << n << ", " << ax << ", " << ay << ", " << az << ", " << easting << ", " << northing << ", " << pos_raw[2] << ", " << activation << std::endl;
+            log_file << std::setprecision(16)<< n << ", " << ax << ", " << ay << ", " << az << ", " << easting << ", " << northing << ", " << pos_raw[2] << ", " << activation << std::endl;
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
             memmove( old_state, state, sizeof(state) ); // old state update
             memmove( old_Px, Px, sizeof(Px) );  // old_Px update
