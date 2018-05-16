@@ -475,6 +475,9 @@ int main(){
             easting_int = easting;
 
             std::cout << std::setprecision(8) << fix <<std::endl;
+            if(fix == 0){
+              std::cout << "no fix" << std::endl;
+            }
 
             //std::cout << "UTM(northing,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
 
