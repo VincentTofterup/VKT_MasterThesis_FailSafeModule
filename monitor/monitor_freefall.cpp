@@ -488,7 +488,7 @@ int main(){
             }*/
 
 
-            double mag = sqrt(pow(ax,2) + pow(ay,2) + pow(az,2)) / 3;
+            double mag = sqrt(pow(ax,2.0) + pow(ay,2.0) + pow(az,2.0));
             if(mag < 1.5)
               freefall ++;
             if(freefall > 14 && pos_raw[2] > 10.0) { // scales to almost 10 meter freefall, and freefall can only occur once we're 10 meterabove ground
