@@ -441,6 +441,11 @@ int main(){
             LLtoUTM(ellip, lat3, lon3, n3, e3, zone);
             LLtoUTM(ellip, lat4, lon4, n4, e4, zone);
 
+            std::cout << std::setprecision(16) << e1, << ", " << n1 << std::endl;
+            std::cout << std::setprecision(16) << e2, << ", " << n2 << std::endl;
+            std::cout << std::setprecision(16) << e3, << ", " << n3 << std::endl;
+            std::cout << std::setprecision(16) << e4, << ", " << n4 << std::endl;
+
             LLtoUTM(ellip, pos_raw[0], pos_raw[1], northing, easting, zone);
 
             //std::cout << "UTM(norting,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
@@ -509,8 +514,8 @@ int main(){
 
 
             log_file << std::setprecision(16)<< n << ", " << ax << ", " << ay << ", " << az << ", " << easting << ", " << northing << ", " << pos_raw[2] << ", " << activation << std::endl;
-            std::cout << easting << ", " << northing << ", " << pos_raw[2] << std::endl;
-            
+            //std::cout << easting << ", " << northing << ", " << pos_raw[2] << std::endl;
+
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
             memmove( old_state, state, sizeof(state) ); // old state update
             memmove( old_Px, Px, sizeof(Px) );  // old_Px update
