@@ -103,7 +103,7 @@ void pos_init(void){
 
 // Possible accelerometer scales (and their register bit settings) are:
 // 2 G (00), 4 G (01), 8 G (10), and 16 G  (11).
-float aRange = 2.0;       // 2G acceleration resolution (max. sensitivity)
+float aRange = 16.0;       // 2G acceleration resolution (max. sensitivity)
 float Ascale = 0.0;         // Scale bit setting as 'int' --> e.g. 3 = 0b11 or 1 = 0b01
 // Possible gyro scales (and their register bit settings) are
 // 250 °/s (00), 500 °/s (01), 1000 °/s (10), and 2000 °/s  (11).
