@@ -442,7 +442,8 @@ int main(){
             n4 = 6148200;
 
 
-            int northing, easting;
+            double northing, easting;
+            int northing_int, easting_int;
             int zone = 32;
             int ellip = 22; // WGS84
 
@@ -458,7 +459,10 @@ int main(){
 
             LLtoUTM(ellip, pos_raw[0], pos_raw[1], northing, easting, zone);
 
-            //std::cout << "UTM(norting,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
+            northing_int = northing;
+            easting_int = easting;
+
+            //std::cout << "UTM(northing,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
 
             Point tmp = {northing, easting};
             //Point poly1[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
