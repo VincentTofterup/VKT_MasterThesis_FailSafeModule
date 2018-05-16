@@ -272,12 +272,12 @@ int main(){
             cx = ((cx_filter * (1229.0/4096.0)) * magCalib[0]) - magBias[0];
             cy = ((cy_filter * (1229.0/4096.0)) * magCalib[1]) - magBias[1];
             cz = ((cz_filter * (1229.0/4096.0)) * magCalib[2])- magBias[2];
-            gx = gx * (gRange/32768.0); //gx/131.0; // degrees pr sec.
-            gy = gy * (gRange/32768.0); // gy/131.0;
-            gz = (gz * (gRange/32768.0)) * -1.0; // gz/131.0;
-            ax = ax * (aRange/32768.0)  * -1.0;//(ax/2048) * 9.82; // meters pr sec, with the +/-16G resolution
-            ay = ay * (aRange/32768.0) * -1.0 ;//(ay/2048) * 9.82;
-            az = az * (aRange/32768.0); //(az/2048) * 9.82;
+            gx = gx * (gRange/32767.0); //gx/131.0; // degrees pr sec.
+            gy = gy * (gRange/32767.0); // gy/131.0;
+            gz = (gz * (gRange/32767.0)) * -1.0; // gz/131.0;
+            ax = ax * (aRange/32767.0)  * -1.0;//(ax/2048) * 9.82; // meters pr sec, with the +/-16G resolution
+            ay = ay * (aRange/32767.0) * -1.0 ;//(ay/2048) * 9.82;
+            az = az * (aRange/32767.0); //(az/2048) * 9.82;
 
 
             /*** Angle Calculation and Sensor Fusion ***/
