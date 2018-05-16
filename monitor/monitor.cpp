@@ -281,6 +281,14 @@ int main(){
             az = az * (aRange/32767.0); //(az/2048) * 9.82;
 
 
+
+            auto end = std::chrono::system_clock::now();
+            std::chrono::duration<double> elapsed_seconds = end-start;
+            std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+            std::cout << "Elapsed time in this loop nr:" << n << ", time: " << elapsed_seconds.count() << std::endl;
+
+
+
             /*** Angle Calculation and Sensor Fusion ***/
             //Angle calculation from accelerometer. x-Axis pointing to front (ATTENTION: IS THE PRINTED Y-AXIS ON THE SENSOR!)
             pitchAcc = atan2(ay, az);             // pitch is angle between x-axis and z-axis
@@ -538,10 +546,6 @@ int main(){
             firstrun = 2; // first time run variable, now velocities can be set correctly
             // reset heartbeat bool for check
             heartbeat = false;
-            auto end = std::chrono::system_clock::now();
-            std::chrono::duration<double> elapsed_seconds = end-start;
-            std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-            std::cout << "Elapsed time in this loop nr:" << n << ", time: " << elapsed_seconds.count() << std::endl;
 
 
           }
