@@ -471,6 +471,8 @@ int main(){
             northing_int = northing;
             easting_int = easting;
 
+            std::cout << "lat: " << pos_raw[0] << "lon:" << pos_raw[1] <<std::endl;
+
             //std::cout << "UTM(northing,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
 
             Point tmp = {northing, easting};
