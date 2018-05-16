@@ -194,7 +194,8 @@ int main(){
   auto start = std::chrono::system_clock::now();
   std::time_t start_time = std::chrono::system_clock::to_time_t(start);
 
-  log_file << "BEGINNING OF LOGGING, LOGGING TIME: " << std::ctime(&start_time) << std::endl;
+  log_file << std::endl;
+  log_file << "BEGINNING OF LOG, LOGGING TIME: " << std::ctime(&start_time) << std::endl;
   log_file << std::endl;
 
 
