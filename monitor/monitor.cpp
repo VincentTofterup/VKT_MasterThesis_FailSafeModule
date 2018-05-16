@@ -28,6 +28,7 @@
 #include "polygon.h" // polygon definition and used implemented code
 #include <chrono> // sleep this thread
 #include <thread> // sleep this thread
+#include <fstream>
 
 static sigset_t wait_mask;
 
@@ -121,6 +122,8 @@ int main(){
     old_Px[i] = 0.0;
 
   }
+  std::ofstream log_file("log_file.txt", std::ios_base::out | std::ios_base::app )
+
 
   int fd;
 
@@ -183,6 +186,17 @@ int main(){
     printf ("Unable to open serial device\n");
   }
 
+  bool breach = false;
+  int activation = 0;
+  int freefall = 0;
+  int n = 0;
+
+  auto start = std::chrono::system_clock::now();
+  std::time_t start_time = std::chrono::system_clock::to_time_t(start);
+
+  log_file << "BEGINNING OF LOGGING, LOGGING TIME: " << std::ctime(&start_time) << std::endl;
+  log_file << std::endl;
+
 
   std::cout << "Entering While Loop" << std::endl;
 
@@ -235,6 +249,7 @@ int main(){
           }
           if(end_line){
             count = 0;
+            n++;
 
             cx = raw_data[0];
             cy = raw_data[1];
@@ -313,7 +328,7 @@ int main(){
             float dt = 0.10;
 
 
-            if (firstrun == 1) { // first run
+            /*if (firstrun == 1) { // first run
               state[0] = (roll-roll_offset) * degTorad;
               state[1] = (pitch-pitch_offset) * degTorad;
               state[2] = yaw * degTorad;
@@ -340,9 +355,9 @@ int main(){
               state[9] = pos[0];
               state[10] = pos[1];
               state[11] = pos[2];
-            }
+            }*/
             // State Estimate change, from matlab:
-            Pxdot[0] = (Px[3] + Px[5] * Px[1] + Px[4] * Px[0] * Px[1]); // Px(4)+Px(6)*Px(2)+Px(5)*Px(1)*Px(2)
+            /*Pxdot[0] = (Px[3] + Px[5] * Px[1] + Px[4] * Px[0] * Px[1]); // Px(4)+Px(6)*Px(2)+Px(5)*Px(1)*Px(2)
             Pxdot[1] = (Px[4] - Px[5] * Px[0]); // Px(5)-Px(6)*Px(1)
             Pxdot[2] = (Px[5] + Px[4] * Px[0]); // Px(6)+Px(5)*Px(1)
             Pxdot[3] = (((Iy-Iz)/Ix) * Px[5] * Px[4] + (taux/Ix));  // ((Iy-Iz)/Ix)*Px(6)*Px(5)+(tauxP/Ix)
@@ -355,7 +370,7 @@ int main(){
             Pxdot[10] = (Px[7] * (1 + Px[0] * Px[1] * Px[2]) - Px[8] * (Px[0] - Px[1] * Px[2]) + Px[6] * Px[2]);  // Px(8)*(1+Px(1)*Px(2)*Px(3))-Px(9)*(Px(1)-Px(2)*Px(3))+Px(7)*Px(3)
             Pxdot[11] = (Px[8] - Px[6] * Px[1] + Px[7] * Px[0]); // Px(9)-Px(7)*Px(1)+Px(8)*Px(1)
 
-
+            */
             // Matlab functions for the following:
             //PThau = lyap((A+0.5*eye(12))',-C'*C);
             //PThau = inv(PThau)*C';
@@ -364,7 +379,7 @@ int main(){
             // Pxdot = Pxdot + PThau*(C*x-C*Px);
             // Px    = Px + Pxdot * dt;
 
-            Px[0] = Px[0] + ((Pxdot[0] + (1.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
+            /*Px[0] = Px[0] + ((Pxdot[0] + (1.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
             Px[1] = Px[1] + ((Pxdot[1] + (1.5 * (state[1] - Px[1]) + 0.5 * (state[4] - Px[4]))) * dt);
             Px[2] = Px[2] + ((Pxdot[2] + (1.5 * (state[2] - Px[2]) + 0.5 * (state[5] - Px[5]))) * dt);
             Px[3] = Px[3] + ((Pxdot[3] + (0.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
@@ -382,7 +397,7 @@ int main(){
                   Pxdot[i] = old_Pxdot[i];
                   Px[i] = old_Px[i];
               }
-            }
+            }*/
 
             // mavlink gps extraction
             char result;
@@ -399,50 +414,100 @@ int main(){
             //std::cout << "Battery voltage: " << battery << std::endl;
             //std::cout << "pos_raw[lat,lon,alt]: " << pos_raw[0] << ", " << pos_raw[1] << ", " << pos_raw[2] << std::endl;
 
+            double lat1, lon1, lat2, lon2, lat3, lon3, lat4, lon4;
+
+            // Geofence of odense modelflyve plads
+            lat1 = 55.47215865774781;
+            lon1 = 10.414617955684662;
+
+            lat2 = 55.47217082009681;
+            lon2 = 10.41502296924591;
+
+            lat3 = 55.471783143376314;
+            lon3 = 10.415057837963104;
+
+            lat4 = 55.47176641998102;
+            lon4 = 10.414628684520721
+
+            double e1, n1, e2, n2, e3, n3, e4, n4;
+
             double northing, easting;
             int zone = 32;
             int ellip = 22; // WGS84
+
+            LLtoUTM(ellip, lat1, lon1, n1, e1, zone);
+            LLtoUTM(ellip, lat2, lon2, n2, e2, zone);
+            LLtoUTM(ellip, lat3, lon3, n3, e3, zone);
+            LLtoUTM(ellip, lat4, lon4, n4, e4, zone);
 
             LLtoUTM(ellip, pos_raw[0], pos_raw[1], northing, easting, zone);
 
             //std::cout << "UTM(norting,easting, ellipsoid: WGS84, zone:32): " << northing << ", " << easting << std::endl;
 
             Point tmp = {northing, easting};
-            Point poly1[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
-            if (isInside(poly1, 3, tmp)) {
-              //std::cout << "Current position inside defined polygon! (supposed to be inside at all times) " << std::endl;
+            //Point poly1[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
+            Point poly1[] = {{n1,e1}, {n2,e2}, {n3,e3}, {n4,e4}};// New polygon
+
+            if (!isInside(poly1, 4, tmp)) {
+              breach = true;
+              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+              std::this_thread::sleep_for (std::chrono::milliseconds(1400)); // scales to almost 10 meters freefall
+              pwmWrite(PARARACHUTE,OPEN);
+              activation = 1;
+            }else{
+              breach = false;
+              activation = 0;
             }
 
-            Point poly2[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting-10.0}};
-            if (! isInside(poly2, 3, tmp)) {
+            if(!breach){
+              mag = sqrt(pow(ax,2) + pow(ay,2) + pow(az,2)) / 3;
+              if(mag < 1.5)
+                freefall ++;
+              if(freefall > 14 && pos_raw[2] > 10.0) { // scales to almost 10 meter freefall, and freefall can only occur once we're 10 meterabove ground
+                digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+                //std::this_thread::sleep_for (std::chrono::milliseconds(1400)); // scales to almost 10 meters freefall
+                pwmWrite(PARARACHUTE,OPEN);
+                activation = 1;
+              }else{
+                activation = 0;
+              }
+            }
+            //if (isInside(poly1, 3, tmp)) {
+              //std::cout << "Current position inside defined polygon! (supposed to be inside at all times) " << std::endl;
+            //}
+
+            //Point poly2[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting-10.0}};
+            //if (! isInside(poly2, 3, tmp)) {
               //std::cout << "Current position outside defined polygon! (supposed to be outside at all times) " << std::endl;
 
-            }
+            //}
 
-            if (roll-roll_offset > 45.0) {
-              std::cout << "roll exceed(lower) limit!" << std::endl;
-              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(1000));
-              pwmWrite(PARARACHUTE,OPEN);
-            }else if (roll-roll_offset < -45.0) {
-              std::cout << "roll exceed(larger) limit!" << std::endl;
-              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(1000));
-              pwmWrite(PARARACHUTE,OPEN);
-            }
+            //if (roll-roll_offset > 45.0) {
+            //  std::cout << "roll exceed(lower) limit!" << std::endl;
+            //  digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+            //  std::this_thread::sleep_for (std::chrono::milliseconds(1000));
+            //  pwmWrite(PARARACHUTE,OPEN);
+            //}else if (roll-roll_offset < -45.0) {
+            //  std::cout << "roll exceed(larger) limit!" << std::endl;
+            //  digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+            //  std::this_thread::sleep_for (std::chrono::milliseconds(1000));
+            //  pwmWrite(PARARACHUTE,OPEN);
+            //}
 
-            if (pitch-pitch_offset > 45.0) {
-              std::cout << "pitch exceed(large) limit!" << std::endl;
-              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(1000));
-              pwmWrite(PARARACHUTE,OPEN);
-            }else if (pitch-pitch_offset < -45.0) {
-              std::cout << "pitch exceed(lower) limit!" << std::endl;
-              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(1000));
-              pwmWrite(PARARACHUTE,OPEN);
-            }
+            //if (pitch-pitch_offset > 45.0) {
+            //  std::cout << "pitch exceed(large) limit!" << std::endl;
+            //  digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+            //  std::this_thread::sleep_for (std::chrono::milliseconds(1000));
+            //  pwmWrite(PARARACHUTE,OPEN);
+            //}else if (pitch-pitch_offset < -45.0) {
+            //  std::cout << "pitch exceed(lower) limit!" << std::endl;
+            //  digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+            //  std::this_thread::sleep_for (std::chrono::milliseconds(1000));
+            //  pwmWrite(PARARACHUTE,OPEN);
+            //}
 
+
+            log_file << n << ", " << ax << ", " << ay << ", " << az << ", " << easting << ", " << northing << ", " << pos_raw[2] << ", " << activation << std::endl;
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
             memmove( old_state, state, sizeof(state) ); // old state update
             memmove( old_Px, Px, sizeof(Px) );  // old_Px update
