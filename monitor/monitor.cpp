@@ -484,17 +484,19 @@ int main(){
             Point tmp = {northing, easting};
             //Point poly1[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
             Point poly1[] = {{n1,e1}, {n2,e2}, {n3,e3}, {n4,e4}};// New polygon
-
-            if (!isInside(poly1, 4, tmp)) {
-              breach = true;
-              digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(1400)); // scales to almost 10 meters freefall
-              pwmWrite(PARARACHUTE,OPEN);
-              activation = 1;
-            }else{
-              breach = false;
-              activation = 0;
+            if(fix !=0){ // we need gps fix
+              if (!isInside(poly1, 4, tmp)) {
+                breach = true;
+                digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
+                std::this_thread::sleep_for (std::chrono::milliseconds(1400)); // scales to almost 10 meters freefall
+                pwmWrite(PARARACHUTE,OPEN);
+                activation = 1;
+              }else{
+                breach = false;
+                activation = 0;
+              }
             }
+
 
             double mag = sqrt(pow(ax,2.0) + pow(ay,2.0) + pow(az,2.0));
             /*if(!breach){
