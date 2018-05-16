@@ -249,7 +249,7 @@ int main(){
             }
           }
           if(end_line){
-            auto start = std::chrono::system_clock::now();
+            //auto start = std::chrono::system_clock::now();
             count = 0;
             n++;
 
@@ -535,7 +535,7 @@ int main(){
             //}
 
 
-            log_file << std::setprecision(8)<< n << ", " << ax << ", " << ay << ", " << az << ", " << easting_int << ", " << northing_int << ", " << pos_raw[2] << ", " << activation << std::endl;
+            log_file << std::setprecision(8)<< n <<", "<< mag << ", " << ax << ", " << ay << ", " << az << ", " << easting_int << ", " << northing_int << ", " << pos_raw[2] << ", " << activation << std::endl;
 
             //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
             //memmove( old_state, state, sizeof(state) ); // old state update
@@ -546,10 +546,10 @@ int main(){
             // reset heartbeat bool for check
             heartbeat = false;
 
-            auto end = std::chrono::system_clock::now();
-            std::chrono::duration<double> elapsed_seconds = end-start;
-            std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-            std::cout << "AVG = " << mag <<", Elapsed time in this loop nr:" << n << ", time: " << elapsed_seconds.count() << std::endl;
+            //auto end = std::chrono::system_clock::now();
+            //std::chrono::duration<double> elapsed_seconds = end-start;
+            //std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+            //std::cout << "AVG = " << mag <<", Elapsed time in this loop nr:" << n << ", time: " << elapsed_seconds.count() << std::endl;
 
 
           }
