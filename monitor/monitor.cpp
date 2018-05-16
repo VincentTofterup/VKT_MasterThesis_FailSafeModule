@@ -69,6 +69,8 @@ void pos_parse_msg(unsigned char *msg, unsigned long now){
         pos_raw[1] =  (double) gri.lon/10000000;
         pos_raw[2] =  (double) gri.alt/1000;
 
+        std::cout << setprecision(8) << gri.fix_type << std::end;
+
 				//printf ("GPS_RAW_INT ");
 				//printf ("%s", s);
 				//fprintf (f, "GPS_RAW_INT,%s", s);
