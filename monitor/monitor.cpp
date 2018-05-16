@@ -541,7 +541,7 @@ int main(){
             auto end = std::chrono::system_clock::now();
             std::chrono::duration<double> elapsed_seconds = end-start;
             std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-            std::cout << "Elapsed time in this loop nr:" << n << "time: " << elapsed_seconds.count() << std::endl;
+            std::cout << "Elapsed time in this loop nr:" << n << ", time: " << elapsed_seconds.count() << std::endl;
 
 
           }
