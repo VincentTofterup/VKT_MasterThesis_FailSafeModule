@@ -122,7 +122,7 @@ int main(){
     old_Px[i] = 0.0;
 
   }
-  std::ofstream log_file("log_file.txt", std::ios_base::out | std::ios_base::app )
+  std::ofstream log_file("log_file.txt", std::ios_base::out | std::ios_base::app );
 
 
   int fd;
@@ -451,7 +451,7 @@ int main(){
             if (!isInside(poly1, 4, tmp)) {
               breach = true;
               digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-              std::this_thread::sleep_for (std::chrono::milliseconds(1400)); // scales to almost 10 meters freefall
+              std::this_thread::sleep_for (std::chrono::milliseconds(1000)); // scales to almost 5 meters freefall
               pwmWrite(PARARACHUTE,OPEN);
               activation = 1;
             }else{
@@ -460,12 +460,12 @@ int main(){
             }
 
             if(!breach){
-              mag = sqrt(pow(ax,2) + pow(ay,2) + pow(az,2)) / 3;
+              double mag = sqrt(pow(ax,2) + pow(ay,2) + pow(az,2)) / 3;
               if(mag < 1.5)
                 freefall ++;
               if(freefall > 14 && pos_raw[2] > 10.0) { // scales to almost 10 meter freefall, and freefall can only occur once we're 10 meterabove ground
                 digitalWrite (CUTOFF, HIGH) ;	// Cutoff Motor system!
-                //std::this_thread::sleep_for (std::chrono::milliseconds(1400)); // scales to almost 10 meters freefall
+                //std::this_thread::sleep_for (std::chrono::milliseconds(100)); // just a little delay after motor stop
                 pwmWrite(PARARACHUTE,OPEN);
                 activation = 1;
               }else{
