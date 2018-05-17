@@ -432,12 +432,12 @@ int main(){
             char result;
           	unsigned long now = millis_ml();
           	serbuf_cnt = SER_BUF_SIZE;
-          	serbuf_cnt = ser_receive (ser, serbuf, serbuf_cnt);
+          	//serbuf_cnt = ser_receive (ser, serbuf, serbuf_cnt);
 
           	/* if we received new data */
-          	if (serbuf_cnt > 0){
-          		result = ml_rx_update(now, serbuf, serbuf_cnt);
-          	}
+          	//if (serbuf_cnt > 0){
+          	//	result = ml_rx_update(now, serbuf, serbuf_cnt);
+          	//}
 
 
             //std::cout << "Battery voltage: " << battery << std::endl;
@@ -485,7 +485,7 @@ int main(){
             std::cout << std::setprecision(16) << e3 << ", " << n3 << std::endl;
             std::cout << std::setprecision(16) << e4 << ", " << n4 << std::endl;*/
 
-            LLtoUTM(ellip, pos_raw[0], pos_raw[1], northing, easting, zone);
+            //LLtoUTM(ellip, pos_raw[0], pos_raw[1], northing, easting, zone);
 
             northing_int = northing;
             easting_int = easting;
@@ -494,7 +494,7 @@ int main(){
 
             Point tmp = {northing, easting};
             //Point poly1[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
-            Point poly1[] = {{n1,e1}, {n2,e2}, {n3,e3}, {n4,e4}};// New polygon
+            /*Point poly1[] = {{n1,e1}, {n2,e2}, {n3,e3}, {n4,e4}};// New polygon
             if(fix !=0){ // we need gps fix
               if (!isInside(poly1, 4, tmp)) {
                 breach = true;
@@ -506,7 +506,7 @@ int main(){
                 breach = false;
                 activation = 0;
               }
-            }
+            }*/
 
 
             double mag = sqrt(pow(ax,2.0) + pow(ay,2.0) + pow(az,2.0));
