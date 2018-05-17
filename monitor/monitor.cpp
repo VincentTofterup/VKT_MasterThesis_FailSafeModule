@@ -341,7 +341,7 @@ int main(){
             float dt = 0.10;
 
 
-            if (firstrun == 1) { // first run
+            /*if (firstrun == 1) { // first run
               state[0] = (roll-roll_offset) * degTorad;
               state[1] = (pitch-pitch_offset) * degTorad;
               state[2] = yaw * degTorad;
@@ -383,7 +383,7 @@ int main(){
             Pxdot[10] = (Px[7] * (1 + Px[0] * Px[1] * Px[2]) - Px[8] * (Px[0] - Px[1] * Px[2]) + Px[6] * Px[2]);  // Px(8)*(1+Px(1)*Px(2)*Px(3))-Px(9)*(Px(1)-Px(2)*Px(3))+Px(7)*Px(3)
             Pxdot[11] = (Px[8] - Px[6] * Px[1] + Px[7] * Px[0]); // Px(9)-Px(7)*Px(1)+Px(8)*Px(1)
 
-
+            */
             // Matlab functions for the following:
             //PThau = lyap((A+0.5*eye(12))',-C'*C);
             //PThau = inv(PThau)*C';
@@ -392,7 +392,7 @@ int main(){
             // Pxdot = Pxdot + PThau*(C*x-C*Px);
             // Px    = Px + Pxdot * dt;
 
-            Px[0] = Px[0] + ((Pxdot[0] + (1.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
+            /*Px[0] = Px[0] + ((Pxdot[0] + (1.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
             Px[1] = Px[1] + ((Pxdot[1] + (1.5 * (state[1] - Px[1]) + 0.5 * (state[4] - Px[4]))) * dt);
             Px[2] = Px[2] + ((Pxdot[2] + (1.5 * (state[2] - Px[2]) + 0.5 * (state[5] - Px[5]))) * dt);
             Px[3] = Px[3] + ((Pxdot[3] + (0.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
@@ -410,36 +410,17 @@ int main(){
                   Pxdot[i] = old_Pxdot[i];
                   Px[i] = old_Px[i];
               }
-            }
-
-            std::cout << "Pxdot: ";
-            for (int i = 0; i < 12; i++) {
-              std::cout << Pxdot[i] << ", ";
-            }
-            std::cout << std::endl;
-            std::cout << "Px: ";
-            for (int i = 0; i < 12; i++) {
-              std::cout << Px[i] << ", ";
-            }
-            std::cout << std::endl;
-            std::cout << "State: ";
-            for (int i = 0; i < 12; i++) {
-              std::cout << state[i] << ", ";
-            }
-            std::cout << std::endl;
-
-
-            std::cout << "yaw: " << yaw << std::endl;
+            }*/
             // mavlink gps extraction
-            //char result;
-          	//unsigned long now = millis_ml();
-          	//serbuf_cnt = SER_BUF_SIZE;
-          	//serbuf_cnt = ser_receive (ser, serbuf, serbuf_cnt);
+            char result;
+          	unsigned long now = millis_ml();
+          	serbuf_cnt = SER_BUF_SIZE;
+          	serbuf_cnt = ser_receive (ser, serbuf, serbuf_cnt);
 
           	/* if we received new data */
-          	//if (serbuf_cnt > 0){
-          	//	result = ml_rx_update(now, serbuf, serbuf_cnt);
-          	//}
+          	if (serbuf_cnt > 0){
+          		result = ml_rx_update(now, serbuf, serbuf_cnt);
+          	}
 
 
             //std::cout << "Battery voltage: " << battery << std::endl;
@@ -496,7 +477,7 @@ int main(){
 
             Point tmp = {northing, easting};
             //Point poly1[] = {{northing-10.0,easting-10.0}, {northing+10.0, easting-10.0}, {northing,easting+10.0}};
-            /*Point poly1[] = {{n1,e1}, {n2,e2}, {n3,e3}, {n4,e4}};// New polygon
+            Point poly1[] = {{n1,e1}, {n2,e2}, {n3,e3}, {n4,e4}};// New polygon
             if(fix !=0){ // we need gps fix
               if (!isInside(poly1, 4, tmp)) {
                 breach = true;
@@ -508,7 +489,7 @@ int main(){
                 breach = false;
                 activation = 0;
               }
-            }*/
+            }
 
 
             double mag = sqrt(pow(ax,2.0) + pow(ay,2.0) + pow(az,2.0));
@@ -562,11 +543,11 @@ int main(){
 
             log_file << std::setprecision(8)<< n << ", "<< mag << ", " << ax << ", " << ay << ", " << az << ", " << easting_int << ", " << northing_int << ", " << pos_raw[2] << ", " << activation << std::endl;
 
-            old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
+            /*old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
             memmove( old_state, state, sizeof(state) ); // old state update
             memmove( old_Px, Px, sizeof(Px) );  // old_Px update
             memmove( old_Pxdot, Pxdot, sizeof(Pxdot) ); // old_Pxdot update
-
+            */
             firstrun = 2; // first time run variable, now velocities can be set correctly
             // reset heartbeat bool for check
             heartbeat = false;
