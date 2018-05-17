@@ -560,10 +560,10 @@ int main(){
 
             log_file << std::setprecision(8)<< n << ", "<< mag << ", " << ax << ", " << ay << ", " << az << ", " << easting_int << ", " << northing_int << ", " << pos_raw[2] << ", " << activation << std::endl;
 
-            //old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
-            //memmove( old_state, state, sizeof(state) ); // old state update
-            //memmove( old_Px, Px, sizeof(Px) );  // old_Px update
-            //memmove( old_Pxdot, Pxdot, sizeof(Pxdot) ); // old_Pxdot update
+            old_pos[0] = pos[0]; old_pos[1] = pos[1]; old_pos[2] = pos[2]; // old_pos update
+            memmove( old_state, state, sizeof(state) ); // old state update
+            memmove( old_Px, Px, sizeof(Px) );  // old_Px update
+            memmove( old_Pxdot, Pxdot, sizeof(Pxdot) ); // old_Pxdot update
 
             firstrun = 2; // first time run variable, now velocities can be set correctly
             // reset heartbeat bool for check
