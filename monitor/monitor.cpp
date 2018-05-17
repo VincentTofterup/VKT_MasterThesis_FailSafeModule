@@ -341,7 +341,7 @@ int main(){
             float dt = 0.10;
 
 
-            /*if (firstrun == 1) { // first run
+            if (firstrun == 1) { // first run
               state[0] = (roll-roll_offset) * degTorad;
               state[1] = (pitch-pitch_offset) * degTorad;
               state[2] = yaw * degTorad;
@@ -368,9 +368,9 @@ int main(){
               state[9] = pos[0];
               state[10] = pos[1];
               state[11] = pos[2];
-            }*/
+            }
             // State Estimate change, from matlab:
-            /*Pxdot[0] = (Px[3] + Px[5] * Px[1] + Px[4] * Px[0] * Px[1]); // Px(4)+Px(6)*Px(2)+Px(5)*Px(1)*Px(2)
+            Pxdot[0] = (Px[3] + Px[5] * Px[1] + Px[4] * Px[0] * Px[1]); // Px(4)+Px(6)*Px(2)+Px(5)*Px(1)*Px(2)
             Pxdot[1] = (Px[4] - Px[5] * Px[0]); // Px(5)-Px(6)*Px(1)
             Pxdot[2] = (Px[5] + Px[4] * Px[0]); // Px(6)+Px(5)*Px(1)
             Pxdot[3] = (((Iy-Iz)/Ix) * Px[5] * Px[4] + (taux/Ix));  // ((Iy-Iz)/Ix)*Px(6)*Px(5)+(tauxP/Ix)
@@ -383,7 +383,7 @@ int main(){
             Pxdot[10] = (Px[7] * (1 + Px[0] * Px[1] * Px[2]) - Px[8] * (Px[0] - Px[1] * Px[2]) + Px[6] * Px[2]);  // Px(8)*(1+Px(1)*Px(2)*Px(3))-Px(9)*(Px(1)-Px(2)*Px(3))+Px(7)*Px(3)
             Pxdot[11] = (Px[8] - Px[6] * Px[1] + Px[7] * Px[0]); // Px(9)-Px(7)*Px(1)+Px(8)*Px(1)
 
-            */
+
             // Matlab functions for the following:
             //PThau = lyap((A+0.5*eye(12))',-C'*C);
             //PThau = inv(PThau)*C';
@@ -392,7 +392,7 @@ int main(){
             // Pxdot = Pxdot + PThau*(C*x-C*Px);
             // Px    = Px + Pxdot * dt;
 
-            /*Px[0] = Px[0] + ((Pxdot[0] + (1.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
+            Px[0] = Px[0] + ((Pxdot[0] + (1.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
             Px[1] = Px[1] + ((Pxdot[1] + (1.5 * (state[1] - Px[1]) + 0.5 * (state[4] - Px[4]))) * dt);
             Px[2] = Px[2] + ((Pxdot[2] + (1.5 * (state[2] - Px[2]) + 0.5 * (state[5] - Px[5]))) * dt);
             Px[3] = Px[3] + ((Pxdot[3] + (0.5 * (state[0] - Px[0]) + 0.5 * (state[3] - Px[3]))) * dt);
@@ -410,7 +410,23 @@ int main(){
                   Pxdot[i] = old_Pxdot[i];
                   Px[i] = old_Px[i];
               }
-            }*/
+            }
+
+            std::cout << "Pxdot: ";
+            for (int i = 0; i < 12; i++) {
+              std::cout << Pxdot[i] << ", ";
+            }
+            std::cout << std::endl;
+            std::cout << "Px: ";
+            for (int i = 0; i < 12; i++) {
+              std::cout << Px[i] << ", ";
+            }
+            std::cout << std::endl;
+            std::cout << "State: ";
+            for (int i = 0; i < 12; i++) {
+              std::cout << state[i] << ", ";
+            }
+            std::cout << std::endl;
 
             // mavlink gps extraction
             char result;
