@@ -428,10 +428,12 @@ int main(){
             }
             std::cout << std::endl;
 
+
+            std::cout << "yaw: " << yaw << std::endl;
             // mavlink gps extraction
-            char result;
-          	unsigned long now = millis_ml();
-          	serbuf_cnt = SER_BUF_SIZE;
+            //char result;
+          	//unsigned long now = millis_ml();
+          	//serbuf_cnt = SER_BUF_SIZE;
           	//serbuf_cnt = ser_receive (ser, serbuf, serbuf_cnt);
 
           	/* if we received new data */
