@@ -309,7 +309,7 @@ int main(){
             rollRad = -roll/RadToDeg;
             cx_h = cx*cos(pitchRad) + cy*sin(rollRad)*sin(pitchRad) - cz*cos(rollRad)*sin(pitchRad);
             cy_h = cy*cos(rollRad) + cz*sin(rollRad);
-            yawMag = wrap(cx_h, cy_h);
+            yawMag = atan2(cx_h, cy_h);
             //yawMag = wrap(cx,cy);  //without tilt compensation
 
             //yawMag = yawMag * RadToDeg;
