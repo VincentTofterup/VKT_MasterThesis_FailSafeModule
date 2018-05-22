@@ -499,6 +499,9 @@ int main(){
             }else{
               activation = 0;
             }
+            if (mag > 0.4){ // reset counter for free fall
+              freefall = 0;
+            }
 
             //if (isInside(poly1, 3, tmp)) {
               //std::cout << "Current position inside defined polygon! (supposed to be inside at all times) " << std::endl;
